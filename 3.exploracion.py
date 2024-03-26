@@ -31,62 +31,71 @@ movie.sample(5) # separar el año de la película del nombre , poner nombre de v
 # Convertir el timestamp a formato fecha en la tabla ratings
 
 fn.ejecutar_sql('2.preprocesamiento.sql',conn) # ejecutar script de preprocesamiento
-ratings_fecha = pd.read_sql('SELECT * FROM ratings_alter', conn)
-ratings_fecha.info()
+
+ratings_alter = pd.read_sql('SELECT * FROM ratings_alter', conn)
+ratings_alter.info()
 
 # 1. Exploración de datos tabla ratings_alter
 
 #¿Cuantas películas ha visto cada usuario?
 
-s = pd.read_sql(""" SELECT userId as usuario, count(*) as numero_peliculas
-                    FROM ratings
+s = pd.read_sql(""" SELECT userid as usuario, count(*) as numero_peliculas
+                    FROM ratings_alter
                     GROUP BY usuario
                     ORDER BY numero_peliculas DESC""",conn)
-s.describe()
+s.sample(10)
 
 sns.histplot(s['numero_peliculas'], color='orange', bins=70 )
 
-# Se eliminaran a los usuarios que han visto mas de 1000 peliculas
+# Se eliminaran a los usuarios que han visto mas de 1000 peliculas 
 
-s2 = pd.read_sql(""" SELECT userId, count(*) num_peliculas
-                FROM ratings
-                GROUP BY userId
-                HAVING num_peliculas < 1000
+s2 = pd.read_sql(""" SELECT userid, count(*) num_peliculas
+                FROM ratings_alter
+                GROUP BY userid
+                HAVING num_peliculas < 1000 and num_peliculas > 10
                 ORDER BY num_peliculas""",conn)
 
 sns.histplot(s2['num_peliculas'], color='orange', bins=70 )
 
-#¿Cuantas peliculas ve el usuario mensualmente?
+# cuantas peliculas son vistas por año?
 
-# ---
-
+sr = pd.read_sql(""" SELECT anio, count(*) as conteo
+                FROM ratings_alter
+                GROUP BY anio
+                ORDER BY anio ASC""",conn) 
 
 
 #¿Cuales son las calificaciones mas frecuentes que los usuarios dan a las películas?
 
 r = pd.read_sql(""" SELECT rating as calificacion, 
                     count(*) as conteo
-                    FROM ratings    
+                    FROM ratings_alter    
                     GROUP BY rating 
                     ORDER BY conteo DESC""",conn)
 
 
 sns.barplot(x='calificacion', y='conteo', data=r, color='orange')
 
-# ¿Cuales han sido las películas con mayor calificación?
-
-mc = pd.read_sql(""" SELECT movieId as pelicula, rating as calificacion,
-                     count(*) as conteo
-                     FROM ratings
-                     GROUP BY calificacion
-                     ORDER BY conteo ASC""",conn)
-
 
 # Por cuantos usuarios ha sido calificada cada película?
 
-f = pd.read_sql("""SELECT movieId as pelicula, count(*) as conteo
-               FROM ratings 
+f = pd.read_sql("""SELECT movieId as pelicula, count(*) as calificaciones
+               FROM ratings_alter
                GROUP BY pelicula
-               ORDER BY conteo DESC""",conn)
+               ORDER BY calificaciones DESC""",conn)
 
-sns.histplot(f['pelicula'], color='orange', bins=70)
+sns.histplot(f['calificaciones'], color='orange', bins=70)
+
+f.describe() # Se eliminan las peliculas con menos de 20 calificaciones y mas de 150    
+
+
+
+f2 = pd.read_sql("""SELECT movieid, count(*) as calificaciones
+                    FROM ratings_alter
+                    GROUP BY movieid
+                    HAVING calificaciones >= 20 and calificaciones <= 150
+                    ORDER BY calificaciones DESC""",conn)
+
+f2.describe()
+
+sns.histplot(f2['calificaciones'], color='orange', bins=70)
