@@ -99,3 +99,27 @@ f2 = pd.read_sql("""SELECT movieid, count(*) as calificaciones
 f2.describe()
 
 sns.histplot(f2['calificaciones'], color='orange', bins=70)
+
+
+#ANALISIS BASE MOVIES
+movies_2 = pd.read_sql('SELECT * FROM movies', conn)
+movies_2.info()
+
+#Sacar el año del titulo 
+
+m2= pd.read_sql(""" SELECT movieId, title, genres, 
+                instr(title, '(') AS position,
+                SUBSTRING(title,  instr(title, '(')+1, 4) AS año
+                FROM movies """, conn )
+
+m2.head(200)
+
+m3= pd.read_sql(""" SELECT movieId, title, genres,
+                SUBSTR(title, 1, instr(title, '(')-2) AS title
+                FROM movies """, conn )
+
+m3.head(200)
+
+m4= pd.read_sql(""" SELECT movieId, title, genres, 
+                REGEXP_REPLACE(title, '.*\((\d+)\).*', '\1') AS year,
+                FROM movies """, conn )
