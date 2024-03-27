@@ -12,11 +12,12 @@ cur = conn.cursor() # permite e]jecutar comandos SQL
 cur.execute('SELECT name FROM sqlite_master WHERE type="table"') # selecciona las tablas de la base de datos
 cur.fetchall() # observamos las tablas que tiene la base de datos
 
+
 # Ejecutar consultas con pandas para observar el contenido de las tablas #
 
 ratings = pd.read_sql('SELECT * FROM ratings', conn) # contiene las calificaciones que los usuarios dieron a las películas
 movie = pd.read_sql('SELECT * FROM movies', conn)# contiene información de las películas
-
+#usua = pd.read_sql('SELECT * FROM usuarios_sel', conn)
 
 # Observar contenido de las tablas y hacer consideraciones para preprocesamiento 
 
@@ -29,6 +30,7 @@ movie.sample(5) # separar el año de la película del nombre , poner nombre de v
 
 
 # Convertir el timestamp a formato fecha en la tabla ratings
+#Ejecutamos el script de preprocesamiento en esta etapa para cambiar el formato de timestamp a fecha y hacer la exploración de datos
 
 fn.ejecutar_sql('2.preprocesamiento.sql',conn) # ejecutar script de preprocesamiento
 
@@ -49,7 +51,7 @@ sns.histplot(s['numero_peliculas'], color='orange', bins=70 )
 
 # Se eliminaran a los usuarios que han visto mas de 1000 peliculas 
 
-s2 = pd.read_sql(""" SELECT userid, count(*) num_peliculas
+s2 = pd.read_sql(""" SELECT userid, count(*) AS num_peliculas
                 FROM ratings_alter
                 GROUP BY userid
                 HAVING num_peliculas < 1000 and num_peliculas > 10
@@ -57,12 +59,12 @@ s2 = pd.read_sql(""" SELECT userid, count(*) num_peliculas
 
 sns.histplot(s2['num_peliculas'], color='orange', bins=70 )
 
-# cuantas peliculas son vistas por año?
+# cuantas peliculas son vistas mensualmente ?
 
-sr = pd.read_sql(""" SELECT anio, count(*) as conteo
+sr = pd.read_sql(""" SELECT mes, count(*) as peliculas_vistas
                 FROM ratings_alter
-                GROUP BY anio
-                ORDER BY anio ASC""",conn) 
+                GROUP BY mes
+                ORDER BY peliculas_vistas DESC""",conn) 
 
 
 #¿Cuales son las calificaciones mas frecuentes que los usuarios dan a las películas?
@@ -101,6 +103,7 @@ f2.describe()
 sns.histplot(f2['calificaciones'], color='orange', bins=70)
 
 
+
 #ANALISIS BASE MOVIES
 movies_2 = pd.read_sql('SELECT * FROM movies', conn)
 movies_2.info()
@@ -123,3 +126,14 @@ m3.head(200)
 m4= pd.read_sql(""" SELECT movieId, title, genres, 
                 REGEXP_REPLACE(title, '.*\((\d+)\).*', '\1') AS year,
                 FROM movies """, conn )
+
+
+ll = pd.read_sql("""
+                     SELECT *,  SUBSTR(
+                                        title, 
+                                        instr(title, '(') + 1, 
+                                        instr(title, ')') - instr(title, '(') - 1) AS anio,
+                    SUBSTR(title, 1, LENGTH(title)-6) AS pelicula 
+                    FROM movies""", conn)
+
+ll.head()
