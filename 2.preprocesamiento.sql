@@ -1,6 +1,5 @@
---PREPROSESAMIENTO
 
--- BASE RATINGS
+-- PREPROCESAMIENTO BASE RATINGS
 
 --1. Cambiar formato de timestamp a date
 
@@ -38,17 +37,53 @@ GROUP BY movieid
 HAVING calificaciones >= 20 and calificaciones <= 150
 ORDER BY calificaciones DESC;
 
---7. SE DEBERIA HACER UN FILTRO DE NUMERO DE PELICULAS VISTAS POR AÑO?
-
 --CREAR TABLA FILTRADA DE RATINGS  --
 
 DROP TABLE IF EXISTS rating_final;
 CREATE TABLE rating_final AS 
-SELECT ratings_alter.userid AS user_id, ratings_alter.movieId AS movie_id,rating,mes,anio
+SELECT ratings_alter.userid AS user_id, ratings_alter.movieId AS movie_id,rating,ratings_alter.mes AS mes_clf,ratings_alter.anio AS anio_clf
 FROM ratings_alter 
 INNER JOIN usuarios_sel ON ratings_alter.userid = usuarios_sel.usuario
 INNER JOIN peliculas_sel ON ratings_alter.movieId = peliculas_sel.movieid;
 
--- CREAR TABLA FILTRADA DE MOVIES_ID
+-- PREPROCESAMIENTO BASE MOVIES
 
----JUNTAR TABLAS---
+--1. SEPARAR EL AÑO DE LA PELICULA
+DROP TABLE IF EXISTS movies_sel;
+CREATE TABLE movies_sel AS
+SELECT *,  SUBSTR(
+                    title, 
+                    instr(title, '(') + 1, 
+                    instr(title, ')') - instr(title, '(') - 1) AS anio_pel,
+                    SUBSTR(title, 1, LENGTH(title)-6) AS pelicula 
+                    FROM movies;
+
+--2. BORRAR GENEROS POCO RELEVANTES
+
+DROP TABLE IF EXISTS gen;
+CREATE TABLE gen AS 
+SELECT genres AS genero,count(*) AS num_peliculas
+FROM movies_sel
+GROUP BY genero
+HAVING num_peliculas >= 20
+ORDER BY num_peliculas DESC;
+
+-- UNIR BASES gen y movies_sel -- PREGUNTAR SI SE PUEDE HACER DE OTRA FORMA
+
+DROP TABLE IF EXISTS movie_final;
+CREATE TABLE movie_final AS
+SELECT movies_sel.* 
+FROM movies_sel
+INNER JOIN gen on movies_sel.genres = gen.genero;
+
+--2. BORRAR COLUMNAS INNECESARIAS
+
+ALTER TABLE movies_sel DROP COLUMN title;
+
+---JUNTAR TABLAS--- SI SE HACE DE OTRA FORMA ENTONCES G¿AGREGAR LA CATEGORIA GENERO A LA UNION 
+
+DROP TABLE IF EXISTS full_table;
+CREATE TABLE full_table AS
+SELECT rating_final.*,movies_sel.anio_pel,movies_sel.pelicula 
+FROM rating_final
+INNER JOIN movies_sel ON rating_final.movie_id = movies_sel.movieId;   

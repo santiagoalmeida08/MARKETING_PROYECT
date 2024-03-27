@@ -104,29 +104,11 @@ sns.histplot(f2['calificaciones'], color='orange', bins=70)
 
 
 
-#ANALISIS BASE MOVIES
-movies_2 = pd.read_sql('SELECT * FROM movies', conn)
-movies_2.info()
+#Exploración de datos tabla movies
 
-#Sacar el año del titulo 
+movie.info()
 
-m2= pd.read_sql(""" SELECT movieId, title, genres, 
-                instr(title, '(') AS position,
-                SUBSTRING(title,  instr(title, '(')+1, 4) AS año
-                FROM movies """, conn )
-
-m2.head(200)
-
-m3= pd.read_sql(""" SELECT movieId, title, genres,
-                SUBSTR(title, 1, instr(title, '(')-2) AS title
-                FROM movies """, conn )
-
-m3.head(200)
-
-m4= pd.read_sql(""" SELECT movieId, title, genres, 
-                REGEXP_REPLACE(title, '.*\((\d+)\).*', '\1') AS year,
-                FROM movies """, conn )
-
+#Separar el año de la película del nombre
 
 ll = pd.read_sql("""
                      SELECT *,  SUBSTR(
@@ -137,3 +119,36 @@ ll = pd.read_sql("""
                     FROM movies""", conn)
 
 ll.head()
+
+# Cuantas peliculas tiene cada genero?
+
+g1 = pd.read_sql("""SELECT genres AS genero,count(*) AS num_peliculas
+                    FROM movies_sel
+                    GROUP BY genero
+                    ORDER BY num_peliculas DESC""",conn)
+
+sns.histplot(g1['num_peliculas'], color='orange', bins=70)
+
+g2 = pd.read_sql("""SELECT genres AS genero,count(*) AS num_peliculas
+                    FROM movies_sel
+                    GROUP BY genero
+                    HAVING num_peliculas >= 30
+                    ORDER BY num_peliculas DESC""",conn)
+
+sns.histplot(g2['num_peliculas'], color='orange', bins=70)
+
+
+gen = pd.read_sql('SELECT * FROM gen', conn)
+
+
+#Observamos las tablas finales
+movie_sel = pd.read_sql('SELECT * FROM movies_sel', conn)
+movie_sin_gen = pd.read_sql('SELECT * FROM movie_final', conn)
+
+
+
+
+
+#Observamos la tabla final
+
+full_table = pd.read_sql('SELECT * FROM full_table', conn)
