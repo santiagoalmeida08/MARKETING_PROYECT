@@ -111,14 +111,12 @@ movie.info()
 #Separar el año de la película del nombre
 
 ll = pd.read_sql("""
-                     SELECT *,  SUBSTR(
-                                        title, 
-                                        instr(title, '(') + 1, 
-                                        instr(title, ')') - instr(title, '(') - 1) AS anio,
-                    SUBSTR(title, 1, LENGTH(title)-6) AS pelicula 
+                     SELECT *,  SUBSTRING(
+                                        title, -5,4) AS anio,
+                    SUBSTRING(title, 1, LENGTH(title)-6) AS pelicula 
                     FROM movies""", conn)
 
-ll.head()
+ll.head(200)
 
 # Cuantas peliculas tiene cada genero?
 
