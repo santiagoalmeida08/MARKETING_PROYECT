@@ -62,7 +62,7 @@ pd.read_sql("""select anio_pel, pelicula,
 ######## 2.1 Sistema de recomendación basado en contenido un solo producto - KNN########
 #######################################################################
 
-pelicula=pd.read_sql('select * from movie_final', conn )
+pelicula=pd.read_sql('select * from final_table', conn )
 pelicula.info()
 pelicula['anio_pel']=pelicula.anio_pel.astype('int')
 pelicula.info()

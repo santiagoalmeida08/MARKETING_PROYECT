@@ -157,3 +157,5 @@ a1 = pd.read_sql("""SELECT anio_pel AS anio,count(*) AS num_peliculas_anio
                     GROUP BY anio_pel
                     ORDER BY num_peliculas_anio ASC""",conn)
 a1.head(50)# se confirma que si se extrajo bien el año de nombre de la pelicula
+
+final_table= pd.read_sql('SELECT * FROM final_table', conn)
