@@ -85,3 +85,11 @@ CREATE TABLE full_table AS
 SELECT rating_final.*,movies_sel.anio_pel,movies_sel.pelicula 
 FROM rating_final
 INNER JOIN movies_sel ON rating_final.movie_id = movies_sel.movieId;   
+
+
+
+DROP TABLE IF EXISTS final_table;
+CREATE TABLE final_table AS
+SELECT rating_final.*, movie_final.anio_pel,movie_final.pelicula 
+FROM rating_final
+INNER JOIN movies_sel ON rating_final.movie_id = movie_final.movieId;   

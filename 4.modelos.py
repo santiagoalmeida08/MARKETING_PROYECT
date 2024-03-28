@@ -62,10 +62,11 @@ pd.read_sql("""select anio_pel, pelicula,
 ######## 2.1 Sistema de recomendación basado en contenido un solo producto - KNN########
 #######################################################################
 
-pelicula=pd.read_sql('select * from movies_sel', conn )
+pelicula=pd.read_sql('select * from movie_final', conn )
 pelicula.info()
 pelicula['anio_pel']=pelicula.anio_pel.astype('int')
 pelicula.info()
+
 
 ##### escalar para que año esté en el mismo rango ###
 
@@ -73,10 +74,9 @@ sc=MinMaxScaler()
 pelicula[["year_sc"]]=sc.fit_transform(pelicula[['anio_pel']])
 
 
-
 ## eliminar variables que no se van a utilizar ###
 """Las columnas que no se van a usar son:
--user id -movie id  -rating  -"""
+-user id -movie id  -rating  -mes y año de calificacion -pelicula"""
 
 
 
