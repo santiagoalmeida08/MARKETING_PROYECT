@@ -152,11 +152,8 @@ full_table = pd.read_sql('SELECT * FROM full_table', conn)
 full_table.head(200)
 full_table.duplicated().sum() #no hay duplicados por lo cual las filas no se duplicaron al unir las tablas
 
-eje= pd.read_sql(""" SELECT * 
-                 FROM full_table 
-                 WHERE pelicula LIKE '%Postman%'""", conn)
 a1 = pd.read_sql("""SELECT anio_pel AS anio,count(*) AS num_peliculas_anio
                     FROM full_table
                     GROUP BY anio_pel
                     ORDER BY num_peliculas_anio ASC""",conn)
-a1.head(50)
+a1.head(50)# se confirma que si se extrajo bien el año de nombre de la pelicula
