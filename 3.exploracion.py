@@ -109,14 +109,17 @@ sns.histplot(f2['calificaciones'], color='orange', bins=70)
 movie.info()
 
 #Separar el año de la película del nombre
-
+eje= pd.read_sql(""" SELECT * 
+                 FROM movies 
+                 WHERE title LIKE '%Postman%'""", conn)
 ll = pd.read_sql("""
                      SELECT *,  SUBSTRING(
-                                        title, -5,4) AS anio,
+                                        title, -5, 4) AS anio,
                     SUBSTRING(title, 1, LENGTH(title)-6) AS pelicula 
                     FROM movies""", conn)
 
 ll.head(200)
+
 
 # Cuantas peliculas tiene cada genero?
 
@@ -143,10 +146,17 @@ gen = pd.read_sql('SELECT * FROM gen', conn)
 movie_sel = pd.read_sql('SELECT * FROM movies_sel', conn)
 movie_sin_gen = pd.read_sql('SELECT * FROM movie_final', conn)
 
-
-
-
-
 #Observamos la tabla final
 
 full_table = pd.read_sql('SELECT * FROM full_table', conn)
+full_table.head(200)
+full_table.duplicated().sum() #no hay duplicados por lo cual las filas no se duplicaron al unir las tablas
+
+eje= pd.read_sql(""" SELECT * 
+                 FROM full_table 
+                 WHERE pelicula LIKE '%Postman%'""", conn)
+a1 = pd.read_sql("""SELECT anio_pel AS anio,count(*) AS num_peliculas_anio
+                    FROM full_table
+                    GROUP BY anio_pel
+                    ORDER BY num_peliculas_anio ASC""",conn)
+a1.head(50)

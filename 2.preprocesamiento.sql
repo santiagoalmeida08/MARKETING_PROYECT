@@ -55,14 +55,7 @@ SELECT *,  SUBSTRING(
                     title, -5,4) AS anio_pel,
                     SUBSTRING(title, 1, LENGTH(title)-6) AS pelicula 
                     FROM movies;
-"""SELECT *,  SUBSTR(
-                    title, 
-                    instr(title, '(') + 1, 
-                    instr(title, ')') - instr(title, '(') - 1) AS anio_pel,
-                    SUBSTR(title, 1, LENGTH(title)-6) AS pelicula 
-                    FROM movies;"""
-
-
+                    
 --2. BORRAR GENEROS POCO RELEVANTES
 
 DROP TABLE IF EXISTS gen;
