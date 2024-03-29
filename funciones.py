@@ -17,3 +17,10 @@ def mejores_peliculas_por_mes(m):
         mejores_peliculas = m[m['mes_clf'] == mes].sort_values(by='pond', ascending=False).head(5)
         lista.append(mejores_peliculas)
     return pd.concat(lista)
+#2. funcion recomendación por popularidad 
+def mejores_peliculas_por_año(w):
+    lista = []
+    for año_pel in w['anio_pel'].unique(): 
+        mejores_peliculas = w[w['anio_pel'] == año_pel].sort_values(by='pond', ascending=False).head(1)
+        lista.append(mejores_peliculas)
+    return pd.concat(lista)

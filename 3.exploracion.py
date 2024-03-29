@@ -109,9 +109,6 @@ sns.histplot(f2['calificaciones'], color='orange', bins=70)
 movie.info()
 
 #Separar el año de la película del nombre
-eje= pd.read_sql(""" SELECT * 
-                 FROM movies 
-                 WHERE title LIKE '%Postman%'""", conn)
 
 ll = pd.read_sql("""
                      SELECT *,  SUBSTRING(
@@ -121,6 +118,10 @@ ll = pd.read_sql("""
 
 ll.head(200)
 
+tabla= pd.read_sql("""SELECT * FROM movie_final
+            WHERE anio_pel GLOB '*[0-9]*' OR 
+            anio_pel <> '%)%'
+            """, conn)# SELECCIONAR SOLO LAS FILAS QUE TIENEN CARACTERES NUMERICOS
 
 # Cuantas peliculas tiene cada genero?
 
