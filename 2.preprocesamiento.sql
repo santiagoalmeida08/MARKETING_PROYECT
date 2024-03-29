@@ -84,8 +84,10 @@ DROP TABLE IF EXISTS movie_final2;
 CREATE TABLE movie_final2 AS
 SELECT movie_final.*
 from movie_final
-WHERE anio_pel GLOB '*[0-9]*' OR anio_pel <> '%)%';
+WHERE anio_pel GLOB '*[0-9]*';
 
+DELETE FROM movie_final2
+WHERE anio_pel LIKE '%)'; --Eliminar años que tengan parentesis
 
 ---JUNTAR TABLAS--- SI SE HACE DE OTRA FORMA ENTONCES G¿AGREGAR LA CATEGORIA GENERO A LA UNION 
 

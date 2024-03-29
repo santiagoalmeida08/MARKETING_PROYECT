@@ -4,6 +4,7 @@ import seaborn as sns
 import funciones as fn
 
 # Conectarse a la base de datos 
+
 conn = sql.connect('data_marketing//db_movies') # identifica bases de datos
 cur = conn.cursor() # permite e]jecutar comandos SQL
 
@@ -117,14 +118,12 @@ ll = pd.read_sql("""
                     FROM movies""", conn)
 
 ll.head(200)
-
 tabla= pd.read_sql("""SELECT * FROM movie_final
-            WHERE anio_pel GLOB '*[0-9]*' OR 
-            anio_pel <> '%)%'
-            """, conn)# SELECCIONAR SOLO LAS FILAS QUE TIENEN CARACTERES NUMERICOS
+            WHERE anio_pel GLOB '*[0-9]*' 
+            """, conn) # SELECCIONAR SOLO LAS FILAS QUE TIENEN CARACTERES NUMERICOS
+
 
 # Cuantas peliculas tiene cada genero?
-
 g1 = pd.read_sql("""SELECT genres AS genero,count(*) AS num_peliculas
                     FROM movies_sel
                     GROUP BY genero
