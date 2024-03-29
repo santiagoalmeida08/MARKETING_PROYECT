@@ -25,6 +25,7 @@ cur.fetchall()
 
 #### 10 peliculas con mejores calificación 
 #MIRAR SI ES IMPORTANTE QUE SEAN LAS MAS VISTAS 
+
 pd.read_sql("""select pelicula, 
             avg(rating) as avg_rat,
             count(*) as vistas

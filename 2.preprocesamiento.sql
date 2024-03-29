@@ -76,7 +76,7 @@ INNER JOIN gen on movies_sel.genres = gen.genero;
 
 --2. BORRAR COLUMNAS INNECESARIAS
 
-ALTER TABLE movies_sel DROP COLUMN title;
+ALTER TABLE movie_final DROP COLUMN title;
 
 ---JUNTAR TABLAS--- SI SE HACE DE OTRA FORMA ENTONCES G¿AGREGAR LA CATEGORIA GENERO A LA UNION 
 
@@ -90,6 +90,9 @@ INNER JOIN movies_sel ON rating_final.movie_id = movies_sel.movieId;
 
 DROP TABLE IF EXISTS final_table;
 CREATE TABLE final_table AS
-SELECT rating_final.*, movie_final.*
+SELECT rating_final.user_id,rating_final.rating,rating_final.mes_clf,rating_final.anio_clf,rating_final.movie_id,
+        movie_final.genres,movie_final.anio_pel,movie_final.pelicula
 FROM rating_final
-INNER JOIN movie_final ON rating_final.movie_id = movie_final.movieId;   
+INNER JOIN movie_final ON rating_final.movie_id = movie_final.movieId;
+
+--LTER TABLE final_table DROP COLUMN title;

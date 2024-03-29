@@ -112,6 +112,7 @@ movie.info()
 eje= pd.read_sql(""" SELECT * 
                  FROM movies 
                  WHERE title LIKE '%Postman%'""", conn)
+
 ll = pd.read_sql("""
                      SELECT *,  SUBSTRING(
                                         title, -5, 4) AS anio,
@@ -133,7 +134,7 @@ sns.histplot(g1['num_peliculas'], color='orange', bins=70)
 g2 = pd.read_sql("""SELECT genres AS genero,count(*) AS num_peliculas
                     FROM movies_sel
                     GROUP BY genero
-                    HAVING num_peliculas >= 30
+                    HAVING num_peliculas >= 20
                     ORDER BY num_peliculas DESC""",conn)
 
 sns.histplot(g2['num_peliculas'], color='orange', bins=70)
@@ -159,3 +160,7 @@ a1 = pd.read_sql("""SELECT anio_pel AS anio,count(*) AS num_peliculas_anio
 a1.head(50)# se confirma que si se extrajo bien el año de nombre de la pelicula
 
 final_table= pd.read_sql('SELECT * FROM final_table', conn)
+final_table.head(1)
+
+
+
