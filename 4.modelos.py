@@ -5,6 +5,8 @@ from sklearn.preprocessing import MinMaxScaler
 from ipywidgets import interact ## para análisis interactivo
 from sklearn import neighbors ### basado en contenido un solo producto consumido
 import joblib
+import funciones as fn
+
 
 
 conn = sql.connect('data_marketing//db_movies') # identifica bases de datos
@@ -34,15 +36,15 @@ q = pd.read_sql("""select pelicula,
             count(*) as vistas
             from final_table
             group by  pelicula
-            order by avg_rat desc
+            order by avg_rat desc 
             """, conn)
 
 q['pond'] = q['avg_rat']*q['vistas']
 
-q.sort_values(by=['pond'], ascending=False).head(10)
+q.sort_values(by=['pond'], ascending=False).head(10)# Se tiene una nueva columna que es pond en la cual se balancea el rating con las vistas y obetenr un nuevo puntaje 
 
 
-# 10 peliculas mejor calificadas del mes
+# 5 peliculas mejor calificadas del mes
 
 m = pd.read_sql("""select mes_clf, pelicula,
             avg(rating) as avg_rat,
@@ -54,25 +56,8 @@ m = pd.read_sql("""select mes_clf, pelicula,
 
 m['pond'] = m['avg_rat']*m['vistas']
 
-#############
-m1 = pd.read_sql("""select mes_clf as mes,pelicula,avg(rating) as prom_clf,count(*) as vistas
-            from final_table
-            where mes=1
-            group by pelicula
-            order by vistas""",conn)
 
-m1['pond'] = m1['prom_clf']*m1['vistas']
-m1.sort_values(by=['pond'], ascending=False).head(5)
-
-
-def mejores_peliculas_por_mes():
-    lista = []
-    for mes in m['mes_clf'].unique(): 
-        mejores_peliculas = m[m['mes_clf'] == mes].sort_values(by='pond', ascending=False).head(5)
-        lista.append(mejores_peliculas)
-    return pd.concat(lista)
-
-mejores_peliculas = mejores_peliculas_por_mes()
+mejores_peliculas = fn.mejores_peliculas_por_mes(m)
 
 
 
