@@ -92,4 +92,4 @@ DROP TABLE IF EXISTS final_table;
 CREATE TABLE final_table AS
 SELECT rating_final.*, movie_final.anio_pel,movie_final.pelicula 
 FROM rating_final
-INNER JOIN movies_sel ON rating_final.movie_id = movie_final.movieId;   
+INNER JOIN movie_final ON rating_final.movie_id = movie_final.movieId;   
