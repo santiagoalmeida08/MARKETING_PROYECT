@@ -76,9 +76,39 @@ pelicula[["year_sc"]]=sc.fit_transform(pelicula[['anio_pel']])
 
 ## eliminar variables que no se van a utilizar ###
 """Las columnas que no se van a usar son:
--user id -movie id  -rating  -mes y año de calificacion -pelicula"""
+-user id -movie id y movieId  -rating  -mes y año de calificacion -pelicula y title """
+
+"""Se usaran solos las columnas genero y año de la pelicula"""
+
+pelicula_dum1=pelicula.drop(columns=['user_id','movie_id','rating','mes_clf', 'anio_clf', 'movieId', 'title','pelicula', 'anio_pel'])
+
+#convertir a dummies 
+pelicula_dum1['genres'].nunique()
+
+col_dum=['genres'] #columnas que se van a convertir a dummies
+pelicula_dum2= pd.get_dummies(pelicula_dum1, columns=col_dum)
+pelicula_dum2.shape
+
+##### ### entrenar modelo #####
+
+## el coseno de un angulo entre dos vectores es 1 cuando son perpendiculares y 0 cuando son paralelos(indicando que son muy similar324e-06	3.336112e-01	3.336665e-01	3.336665e-es)
+model = neighbors.NearestNeighbors(n_neighbors=11, metric='cosine')
+model.fit(pelicula_dum2)
+dist, idlist = model.kneighbors(pelicula_dum2)
+
+
+distancias=pd.DataFrame(dist) ## devuelve un ranking de la distancias más cercanas para cada fila(libro)
+id_list=pd.DataFrame(idlist) ## para saber esas distancias a que item corresponde
 
 
 
-books_dum1=books.drop(columns=['isbn','i_url','year_pub','book_title'])
 
+def MovieRecommender(movie_name = list(pelicula['pelicula'].value_counts().index)):
+    movie_list_name = []
+    movie_id = pelicula[pelicula['pelicula'] == movie_name].index
+    movie_id = movie_id[0]
+    for newid in idlist[movie_id]:
+        movie_list_name.append(pelicula.loc[newid].pelicula)
+    return movie_list_name
+
+print(interact(MovieRecommender))
