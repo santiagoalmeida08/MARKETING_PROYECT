@@ -25,9 +25,6 @@ cur.fetchall()
 
 ##### recomendaciones basado en popularidad ######
 
-#### 10 peliculas con mejores calificación 
-#MIRAR SI ES IMPORTANTE QUE SEAN LAS MAS VISTAS 
-
 
 # las peliculas 10 mejores calificadas DE LA PLATAFORMA  
 
