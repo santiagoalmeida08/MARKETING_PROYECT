@@ -59,7 +59,7 @@ m['pond'] = m['avg_rat']*m['vistas']
 
 mejores_peliculas = fn.mejores_peliculas_por_mes(m)
 
-
+fn.mejores_peliculas_por_mes(m)
 
 
 pd.read_sql("""select pelicula, 

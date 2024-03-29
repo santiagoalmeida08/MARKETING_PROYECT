@@ -1,3 +1,6 @@
+import pandas as pd
+
+
 
 def ejecutar_sql (nombre_archivo, cur):
     sql_file=open(nombre_archivo)
