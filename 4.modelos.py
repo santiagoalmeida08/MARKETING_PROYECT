@@ -26,6 +26,57 @@ cur.fetchall()
 #### 10 peliculas con mejores calificación 
 #MIRAR SI ES IMPORTANTE QUE SEAN LAS MAS VISTAS 
 
+
+# las peliculas 10 mejores calificadas DE LA PLATAFORMA  
+
+q = pd.read_sql("""select pelicula,
+            avg(rating) as avg_rat,
+            count(*) as vistas
+            from final_table
+            group by  pelicula
+            order by avg_rat desc
+            """, conn)
+
+q['pond'] = q['avg_rat']*q['vistas']
+
+q.sort_values(by=['pond'], ascending=False).head(10)
+
+
+# 10 peliculas mejor calificadas del mes
+
+m = pd.read_sql("""select mes_clf, pelicula,
+            avg(rating) as avg_rat,
+            count(*) as vistas
+            from final_table
+            group by mes_clf, pelicula
+            order by mes_clf, avg_rat desc
+            """, conn)
+
+m['pond'] = m['avg_rat']*m['vistas']
+
+#############
+m1 = pd.read_sql("""select mes_clf as mes,pelicula,avg(rating) as prom_clf,count(*) as vistas
+            from final_table
+            where mes=1
+            group by pelicula
+            order by vistas""",conn)
+
+m1['pond'] = m1['prom_clf']*m1['vistas']
+m1.sort_values(by=['pond'], ascending=False).head(5)
+
+
+def mejores_peliculas_por_mes():
+    lista = []
+    for mes in m['mes_clf'].unique(): 
+        mejores_peliculas = m[m['mes_clf'] == mes].sort_values(by='pond', ascending=False).head(5)
+        lista.append(mejores_peliculas)
+    return pd.concat(lista)
+
+mejores_peliculas = mejores_peliculas_por_mes()
+
+
+
+
 pd.read_sql("""select pelicula, 
             avg(rating) as avg_rat,
             count(*) as vistas
@@ -47,16 +98,27 @@ pd.read_sql("""select pelicula,
             """, conn)
 
 # las  peliculas mejores calificadas segun el año de lanzamiento de la pelicula###
-pd.read_sql("""select anio_pel, pelicula, 
+w = pd.read_sql("""select anio_pel, pelicula, 
             avg(rating) as avg_rat,
             count(rating) as rat_numb,
             count(*) as vistas
             from full_table
             group by  anio_pel, pelicula
-            order by anio_pel desc, avg_rat desc limit 20
+            
             """, conn)
 
+w['pond'] = w['avg_rat']*w['vistas']
+w.sort_values(by=['pond'], ascending=False).head(5)
 
+
+def mejores_peliculas_por_año():
+    lista = []
+    for año_pel in w['anio_pel'].unique(): 
+        mejores_peliculas = w[w['anio_pel'] == año_pel].sort_values(by='pond', ascending=False).head(5)
+        lista.append(mejores_peliculas)
+    return pd.concat(lista)
+
+mejores_peliculas_año = mejores_peliculas_por_año()
 
 
 #######################################################################
