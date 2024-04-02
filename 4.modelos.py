@@ -158,7 +158,7 @@ print(interact(MovieRecommender))
 #######################################################################
 
 
-pelicula=pd.read_sql('select * from final_table', conn )
+pelicula=pd.read_sql('select * from movie_final2', conn )
 
 pelicula.info()
 pelicula['anio_pel']=pelicula.anio_pel.astype('int')
@@ -195,40 +195,32 @@ pelicula.sample(10)
 
 pelicula2 = pelicula.drop(columns = 'genres',axis=1)
 
+pelicula2[pelicula2['movieId']== 5]
+
 basemod = pelicula2.copy()
-##### escalar para que año esté en el mismo rango ###
+
+#eliminar columnas innecesarias
+basemod2 = basemod.copy()
 
 
-basemod=basemod.drop(columns=['movie_id','user_id','rating','mes_clf','anio_clf','pelicula'])
-basemod.info()
+base_unique=basemod2.drop(columns=['movieId','pelicula'])
 
 sc=MinMaxScaler()
-basemod = sc.fit_transform(basemod)
-
-
-
-
-## eliminar variables que no se van a utilizar ###
-"""Las columnas que no se van a usar son:
-- movieid,user_id,rating,mest_clf,anio_clf,pelicula"""
-
-"""Se usaran solos las columnas genero y año de la pelicula"""
-
+base_unique['anio_pel']= sc.fit_transform(base_unique[['anio_pel']])
+base_unique
 
 
 ##### ### entrenar modelo #####
 
 ## el coseno de un angulo entre dos vectores es 1 cuando son perpendiculares y 0 cuando son paralelos(indicando que son muy similares)
 model = neighbors.NearestNeighbors(n_neighbors=5, metric='cosine')
-model.fit(basemod)
-dist, idlist = model.kneighbors(basemod)
+model.fit(base_unique)
+dist, idlist = model.kneighbors(base_unique)
 
 
 distancias=pd.DataFrame(dist) ## devuelve un ranking de la distancias más cercanas para cada fila(pelicula)
 id_list=pd.DataFrame(idlist) ## para saber esas distancias a que item corresponde
 
-
-pelicula2['pelicula'].sample(5)
 
 def MovieRecommender(movie_name = list(pelicula2['pelicula'].value_counts().index)):
     movie_list_name = []
@@ -236,7 +228,7 @@ def MovieRecommender(movie_name = list(pelicula2['pelicula'].value_counts().inde
     movie_id = movie_id[0]
     for newid in idlist[movie_id]:
         movie_list_name.append(pelicula2.loc[newid].pelicula)
-    return movie_list_name
+    return list(set(movie_list_name)) 
 
 print(interact(MovieRecommender))
 
