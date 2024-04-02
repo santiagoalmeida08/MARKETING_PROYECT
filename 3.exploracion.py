@@ -60,7 +60,7 @@ s2 = pd.read_sql(""" SELECT userid, count(*) AS num_peliculas
 
 sns.histplot(s2['num_peliculas'], color='orange', bins=70 )
 
-# cuantas peliculas son vistas mensualmente ?
+# cuantas peliculas han sido vistas mensualmente ?
 
 sr = pd.read_sql(""" SELECT mes, count(*) as peliculas_vistas
                 FROM ratings_alter
