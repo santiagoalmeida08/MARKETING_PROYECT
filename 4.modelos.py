@@ -93,7 +93,7 @@ pelicula[["year_sc"]]=sc.fit_transform(pelicula[['anio_pel']])
 
 ## eliminar variables que no se van a utilizar ###
 """Las columnas que no se van a usar son:
--user id -movie id y movieId  -rating  -mes y año de calificacion -pelicula y title """
+- movieId   -pelicula y anio_pel """
 
 """Se usaran solos las columnas genero y año de la pelicula"""
 
@@ -108,13 +108,13 @@ pelicula_dum2.shape
 
 ##### ### entrenar modelo #####
 
-## el coseno de un angulo entre dos vectores es 1 cuando son perpendiculares y 0 cuando son paralelos(indicando que son muy similar324e-06	3.336112e-01	3.336665e-01	3.336665e-es)
+## el coseno de un angulo entre dos vectores es 1 cuando son perpendiculares y 0 cuando son paralelos(indicando que son muy similares)
 model = neighbors.NearestNeighbors(n_neighbors=5, metric='cosine')
 model.fit(pelicula_dum2)
 dist, idlist = model.kneighbors(pelicula_dum2)
 
 
-distancias=pd.DataFrame(dist) ## devuelve un ranking de la distancias más cercanas para cada fila(libro)
+distancias=pd.DataFrame(dist) ## devuelve un ranking de la distancias más cercanas para cada fila(pelicula)
 id_list=pd.DataFrame(idlist) ## para saber esas distancias a que item corresponde
 
 
