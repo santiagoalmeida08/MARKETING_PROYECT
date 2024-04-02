@@ -118,18 +118,19 @@ ll = pd.read_sql("""
                     FROM movies""", conn)
 
 ll.head(200)
+
 tabla= pd.read_sql("""SELECT * FROM movie_final
             WHERE anio_pel GLOB '*[0-9]*' 
             """, conn) # SELECCIONAR SOLO LAS FILAS QUE TIENEN CARACTERES NUMERICOS
 
 
 # Cuantas peliculas tiene cada genero?
+
 g1 = pd.read_sql("""SELECT genres AS genero,count(*) AS num_peliculas
                     FROM movies_sel
                     GROUP BY genero
                     ORDER BY num_peliculas DESC""",conn)
 
-sns.histplot(g1['num_peliculas'], color='orange', bins=70)
 
 g2 = pd.read_sql("""SELECT genres AS genero,count(*) AS num_peliculas
                     FROM movies_sel
@@ -137,7 +138,6 @@ g2 = pd.read_sql("""SELECT genres AS genero,count(*) AS num_peliculas
                     HAVING num_peliculas >= 20
                     ORDER BY num_peliculas DESC""",conn)
 
-sns.histplot(g2['num_peliculas'], color='orange', bins=70)
 
 
 gen = pd.read_sql('SELECT * FROM gen', conn)
