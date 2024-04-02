@@ -89,21 +89,12 @@ WHERE anio_pel GLOB '*[0-9]*';
 DELETE FROM movie_final2
 WHERE anio_pel LIKE '%)'; --Eliminar años que tengan parentesis
 
----JUNTAR TABLAS--- SI SE HACE DE OTRA FORMA ENTONCES G¿AGREGAR LA CATEGORIA GENERO A LA UNION 
-
-DROP TABLE IF EXISTS full_table;
-CREATE TABLE full_table AS
-SELECT rating_final.*,movies_sel.anio_pel,movies_sel.pelicula 
-FROM rating_final
-INNER JOIN movies_sel ON rating_final.movie_id = movies_sel.movieId;   
-
-
+---JUNTAR TABLAS---
 
 DROP TABLE IF EXISTS final_table;
 CREATE TABLE final_table AS
 SELECT rating_final.user_id,rating_final.rating,rating_final.mes_clf,rating_final.anio_clf,rating_final.movie_id,
-        movie_final.genres,movie_final.anio_pel,movie_final.pelicula
+        movie_final2.genres,movie_final2.anio_pel,movie_final2.pelicula
 FROM rating_final
-INNER JOIN movie_final ON rating_final.movie_id = movie_final.movieId;
+INNER JOIN movie_final2 ON rating_final.movie_id = movie_final2.movieId;
 
---LTER TABLE final_table DROP COLUMN title;
