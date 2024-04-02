@@ -88,7 +88,7 @@ pelicula.info()
 ##### escalar para que año esté en el mismo rango ###
 
 sc=MinMaxScaler()
-pelicula[["year_sc"]]=sc.fit_transform(pelicula[['anio_pel']])
+pelicula[["year_sc"]]=sc.fit_transform(pelicula[['anio_pel']])#año escalado
 
 
 ## eliminar variables que no se van a utilizar ###
