@@ -50,7 +50,7 @@ s.sample(10)
 
 sns.histplot(s['numero_peliculas'], color='orange', bins=70 )
 
-# Se eliminaran a los usuarios que han visto mas de 1000 peliculas 
+# Se eliminaran a los usuarios que han visto menos de 1000 peliculas y mas de 10
 
 s2 = pd.read_sql(""" SELECT userid, count(*) AS num_peliculas
                 FROM ratings_alter
@@ -89,14 +89,14 @@ f = pd.read_sql("""SELECT movieId as pelicula, count(*) as calificaciones
 
 sns.histplot(f['calificaciones'], color='orange', bins=70)
 
-f.describe() # Se eliminan las peliculas con menos de 20 calificaciones y mas de 150    
+f.describe() # Se eliminan las peliculas con mas de 7 calificaciones y menos de 150    
 
 
 
 f2 = pd.read_sql("""SELECT movieid, count(*) as calificaciones
                     FROM ratings_alter
                     GROUP BY movieid
-                    HAVING calificaciones >= 20 and calificaciones <= 150
+                    HAVING calificaciones >= 7 and calificaciones <= 150
                     ORDER BY calificaciones DESC""",conn)
 
 f2.describe()
@@ -129,26 +129,22 @@ tabla= pd.read_sql("""SELECT * FROM movie_final
 g1 = pd.read_sql("""SELECT genres AS genero,count(*) AS num_peliculas
                     FROM movies_sel
                     GROUP BY genero
-                    ORDER BY num_peliculas DESC""",conn)
+                    ORDER BY num_peliculas DESC""",conn)###
 
 
 g2 = pd.read_sql("""SELECT genres AS genero,count(*) AS num_peliculas
                     FROM movies_sel
                     GROUP BY genero
                     HAVING num_peliculas >= 20
-                    ORDER BY num_peliculas DESC""",conn)
+                    ORDER BY num_peliculas DESC""",conn)###
 
 
 
 gen = pd.read_sql('SELECT * FROM gen', conn)
 
 
-#Observamos las tablas finales
-movie_sel = pd.read_sql('SELECT * FROM movies_sel', conn)
-movie_sin_gen = pd.read_sql('SELECT * FROM movie_final', conn)
-
 #Observamos la tabla final
 
 final_table = pd.read_sql('SELECT * FROM final_table', conn)
 final_table.sample(3)
-final_table.duplicated().sum() #no hay duplicados por lo cual las filas no se duplicaron al unir las tablas
+
