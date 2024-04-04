@@ -21,6 +21,7 @@ cur = conn.cursor() # permite e]jecutar comandos SQL
 cur.execute("SELECT name FROM sqlite_master WHERE type='table';")
 cur.fetchall()
 
+
 ######################################################################
 ################## 1. sistemas basados en popularidad ###############
 #####################################################################
@@ -76,85 +77,9 @@ w.sort_values(by=['pond'], ascending=False)
 mejores_peliculas_año = fn.mejores_peliculas_por_año(w)
 
 
-#######################################################################
-######## 2.1 Sistema de recomendación basado en contenido un solo producto - KNN########
-#######################################################################
-
-
-pelicula=pd.read_sql('select * from movie_final2', conn )
-pelicula.info()
-pelicula['anio_pel']=pelicula.anio_pel.astype('int')
-pelicula.info()
-
-
-##### escalar para que año esté en el mismo rango ###
-
-sc=MinMaxScaler()
-pelicula[["year_sc"]]=sc.fit_transform(pelicula[['anio_pel']])#año escalado
-
-
-## eliminar variables que no se van a utilizar ###
-"""Las columnas que no se van a usar son:
-- movieId   -pelicula y anio_pel """
-
-"""Se usaran solos las columnas genero y año de la pelicula"""
-
-pelicula_dum1=pelicula.drop(columns=['movieId','pelicula', 'anio_pel'])
-
-#convertir a dummies 
-pelicula_dum1['genres'].nunique()
-
-col_dum=['genres'] #columnas que se van a convertir a dummies
-pelicula_dum2= pd.get_dummies(pelicula_dum1, columns=col_dum)
-pelicula_dum2.shape
-
-##### ### entrenar modelo #####
-
-## el coseno de un angulo entre dos vectores es 1 cuando son perpendiculares y 0 cuando son paralelos(indicando que son muy similares)
-model = neighbors.NearestNeighbors(n_neighbors=5, metric='cosine')
-model.fit(pelicula_dum2)
-dist, idlist = model.kneighbors(pelicula_dum2)
-
-
-distancias=pd.DataFrame(dist) ## devuelve un ranking de la distancias más cercanas para cada fila(pelicula)
-id_list=pd.DataFrame(idlist) ## para saber esas distancias a que item corresponde
-
-
-
-pelicula2=pelicula.copy()
-
-def MovieRecommender(movie_name = list(pelicula['pelicula'].value_counts().index)):
-    movie_list_name = []
-    movie_id = pelicula[pelicula['pelicula'] == movie_name].index
-    movie_id = movie_id[0]
-    for newid in idlist[movie_id]:
-        movie_list_name.append(pelicula.loc[newid].pelicula)
-    return movie_list_name
-
-print(interact(MovieRecommender))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#######################################################################
-######## 2.1 Sistema de recomendación basado en contenido un solo producto - KNN########
-#######################################################################
+####################################################################################
+######## 2.1 Sistema de recomendación basado en contenido un solo producto - KNN ########
+####################################################################################
 
 
 pelicula=pd.read_sql('select * from movie_final2', conn )
@@ -183,7 +108,8 @@ for i in pelicula['gen_list']:
 #Convertir a dummies y agregar al dataframe original
 for i in gen_unique:
     pelicula[i] = pelicula['gen_list'].apply(lambda x: 1 if i in x else 0)
-   
+
+
 #eliminar la columna gen_list
 pelicula.drop(columns=['gen_list'], inplace=True)
 
@@ -233,7 +159,6 @@ def MovieRecommender(movie_name = list(pelicula2['pelicula'].value_counts().inde
     return list(set(movie_list_name)) 
 
 print(interact(MovieRecommender))
-
 
 
 
@@ -303,8 +228,6 @@ recomendar(233)
 print(interact(recomendar))
 
 
-
-
 ############################################################################
 #####4. Sistema de recomendación filtro colaborativo #####
 ############################################################################
@@ -312,16 +235,18 @@ print(interact(recomendar))
 ### datos originales en pandas
 ## knn solo sirve para calificaciones explicitas
 ratings=pd.read_sql('select * from rating_final', conn)
+ratings['rating'].value_counts()
 
+#Lectura de datos con surprise
 
-####los datos deben ser leidos en un formato espacial para surprise
-reader = Reader(rating_scale=(0, 5)) ### la escala de la calificación
-###las columnas deben estar en orden estándar: user item rating
+reader = Reader(rating_scale=(0, 5)) ### la escala de la calificación 0-5
+
+#Lectura dataset con el orden especificado 
 data   = Dataset.load_from_df(ratings[['user_id','movie_id','rating']], reader)
 
-
+from surprise import SVD
 #####Existen varios modelos 
-models=[KNNBasic(),KNNWithMeans(),KNNWithZScore(),KNNBaseline()] 
+models=[KNNBasic(),KNNWithMeans(),KNNWithZScore(),KNNBaseline(),SVD()] 
 results = {}
 
 ###knnBasiscs: calcula el rating ponderando por distancia con usuario/Items
@@ -332,6 +257,7 @@ results = {}
 
 #### for para probar varios modelos ##########
 model=models[1]
+
 for model in models:
  
     CV_scores = cross_validate(model, data, measures=["MAE","RMSE"], cv=5, n_jobs=-1) # se usan medidas de regresion ya que se esta prediciendo una variable numerica
@@ -358,7 +284,7 @@ param_grid = { 'sim_options' : {'name': ['msd','cosine'], \
 ### se afina si es basado en usuario o basado en ítem
 
 gridsearchKNNWithMeans = GridSearchCV(KNNWithMeans, param_grid, measures=['rmse'], \
-                                      cv=2, n_jobs=1)# el cv y el n_jobs puede variar
+                                      cv=2, n_jobs=-1)# el cv y el n_jobs puede variar
                                     
 gridsearchKNNWithMeans.fit(data)
 
@@ -415,6 +341,41 @@ recomendaciones(user_id=609,n_recomend=10)
 
 
 print(interact(recomendaciones))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
