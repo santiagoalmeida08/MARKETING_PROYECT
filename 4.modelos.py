@@ -46,6 +46,21 @@ q.sort_values(by=['pond'], ascending=False).head(10)# Se tiene una nueva columna
 
 # 5 peliculas mejor calificadas del mes
 
+def Top_5_mejor_calificadas_del_mes(mes):
+    m = pd.read_sql(f"""select mes_clf, pelicula,
+            avg(rating) as avg_rat,
+            count(*) as vistas
+            from final_table
+            where mes_clf = {mes}
+            group by mes_clf, pelicula
+            order by avg_rat desc
+            """, conn)
+    m['pond'] = m['avg_rat']*m['vistas']
+    return m.sort_values(by=['pond'], ascending=False).head(5)
+
+print(interact(Top_5_mejor_calificadas_del_mes,mes=(1,12)))
+
+
 m = pd.read_sql("""select mes_clf, pelicula,
             avg(rating) as avg_rat,
             count(*) as vistas
@@ -61,6 +76,7 @@ mejores_peliculas = fn.mejores_peliculas_por_mes(m)
 
 
 # las  peliculas mejores calificadas segun el año de lanzamiento de la pelicula###
+
 w = pd.read_sql("""select anio_pel, pelicula, 
             avg(rating) as avg_rat,
             count(rating) as rat_numb,
@@ -82,58 +98,8 @@ mejores_peliculas_año = fn.mejores_peliculas_por_año(w)
 ####################################################################################
 
 
-pelicula=pd.read_sql('select * from movie_final2', conn )
-
-pelicula.info()
-pelicula['anio_pel']=pelicula.anio_pel.astype('int')
-pelicula.info()
-
-#convertir a dummies variable genero
-generos = set()
-for i in pelicula['genres'].str.split('|'):
-    generos.update(i)
-
-#cuantos generos hay y cuales son?
-num_generos = len(generos)
-print(f'Hay {num_generos} generos en la base de datos')
-
-#convertir la variable genero en una lista de generos 
-pelicula['gen_list'] = pelicula['genres'].str.split('|')
-
-#obtener las categorias unicas de genero
-gen_unique = set()
-for i in pelicula['gen_list']:
-    gen_unique.update(i)
-    
-#Convertir a dummies y agregar al dataframe original
-for i in gen_unique:
-    pelicula[i] = pelicula['gen_list'].apply(lambda x: 1 if i in x else 0)
-
-
-#eliminar la columna gen_list
-pelicula.drop(columns=['gen_list'], inplace=True)
-
-pd.set_option('display.max_columns', None)
-
-#Obstervar dataframe con generos dummies 
-pelicula.sample(10)
-
-pelicula2 = pelicula.drop(columns = 'genres',axis=1)
-
-pelicula2[pelicula2['movieId']== 5]
-
-basemod = pelicula2.copy()
-
-#eliminar columnas innecesarias
-basemod2 = basemod.copy()
-
-
-base_unique=basemod2.drop(columns=['movieId','pelicula'])
-
-sc=MinMaxScaler()
-base_unique['anio_pel']= sc.fit_transform(base_unique[['anio_pel']])
-base_unique
-
+base_unique = fn.proproc_sistema_1soloproducto()[0]
+pelicula2 = fn.proproc_sistema_1soloproducto()[1]
 
 joblib.dump(base_unique,"salidas\\base_unique.joblib") ### para utilizar en segundos modelos
 
@@ -150,15 +116,17 @@ distancias=pd.DataFrame(dist) ## devuelve un ranking de la distancias más cerca
 id_list=pd.DataFrame(idlist) ## para saber esas distancias a que item corresponde
 
 
-def MovieRecommender(movie_name = list(pelicula2['pelicula'].value_counts().index)):
+def Top_5_peliculas_similares(movie_name = list(pelicula2['pelicula'].value_counts().index)):
     movie_list_name = []
     movie_id = pelicula2[pelicula2['pelicula'] == movie_name].index
     movie_id = movie_id[0]
-    for newid in idlist[movie_id]:
+    for newid in idlist[movie_id]:  
+        if newid == movie_id:
+            continue # si es el mismo no lo recomienda
         movie_list_name.append(pelicula2.loc[newid].pelicula)
     return list(set(movie_list_name)) 
 
-print(interact(MovieRecommender))
+print(interact(Top_5_peliculas_similares))
 
 
 
@@ -180,10 +148,8 @@ pel = pd.read_sql('select * from movie_final2', conn)
 user = pd.read_sql('select distinct (user_id) as user_id from rating_final',conn)
 user
 
-user_id=9 ### para ejemplo manual
 
-
-def recomendar(user_id=list(user['user_id'].value_counts().index)):
+def Recomendacion_segun_perfil_usuario(user_id=list(user['user_id'].value_counts().index)):
     
     ###seleccionar solo los ratings del usuario seleccionado
     ratings=pd.read_sql('select *from rating_final where user_id=:user',conn, params={'user':user_id,})
@@ -222,10 +188,7 @@ def recomendar(user_id=list(user['user_id'].value_counts().index)):
     return recomend_b
 
 
-recomendar(233)
-
-
-print(interact(recomendar))
+print(interact(Recomendacion_segun_perfil_usuario))
 
 
 ############################################################################
@@ -321,7 +284,7 @@ predictions_df.sort_values(by='est',ascending=False)
 ##### funcion para recomendar los 10 peliculas con mejores predicciones y llevar base de datos para consultar resto de información
 user = pd.read_sql('select distinct (user_id) as user_id from rating_final',conn)
 user
-def recomendaciones(user_id=list(user['user_id'].value_counts().index),n_recomend=10):
+def recom_colaborativas(user_id=list(user['user_id'].value_counts().index),n_recomend=10):
     
     predictions_userID = predictions_df[predictions_df['uid'] == user_id].\
                     sort_values(by="est", ascending = False).head(n_recomend)
@@ -337,10 +300,10 @@ def recomendaciones(user_id=list(user['user_id'].value_counts().index),n_recomen
 
 
  
-recomendaciones(user_id=609,n_recomend=10)
+ recom_colaborativas(user_id=609,n_recomend=10)
 
 
-print(interact(recomendaciones))
+print(interact(recom_colaborativas))
 
 
 
