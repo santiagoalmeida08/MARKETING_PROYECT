@@ -41,7 +41,36 @@ q = pd.read_sql("""select pelicula,
 
 q['pond'] = q['avg_rat']*q['vistas']
 
-q.sort_values(by=['pond'], ascending=False).head(10)# Se tiene una nueva columna que es pond en la cual se balancea el rating con las vistas y obetenr un nuevo puntaje 
+q.sort_values(by=['pond'], ascending=False).head(10)
+q
+
+a = pd.read_sql("""select pelicula,
+            avg(rating) as avg_rat,
+            count(*) as vistas
+            from final_table
+            group by  pelicula
+            order by avg_rat desc 
+            """, conn)
+
+a.info()
+a['vistas'].describe()
+#a.sort_values(by=['pond'], ascending=False).head(10)# Se tiene una nueva columna que es pond en la cual se balancea el rating con las vistas y obetenr un nuevo puntaje 
+
+def pond(data):
+    data['vistas_esc'] = data['vistas']/data['vistas'].max()
+    data['avg_rat_esc'] = data['avg_rat']/5.0
+    for vista in data['vistas']:
+        if vista <= 35:
+            data['pond'] = (data['avg_rat_esc']*0.3 + data['vistas_esc']*0.7)
+        elif vista > 35 and vista <= 100:
+            data['pond'] = (data['avg_rat_esc']*0.5 + data['vistas_esc']*0.5)
+        else:
+            data['pond'] = (data['avg_rat_esc']*0.7 + data['vistas_esc']*0.3)
+    return data
+
+z = pond(a)
+z.sort_values(by=['pond'], ascending=False).head(10)
+
 
 
 # 5 peliculas mejor calificadas del mes
@@ -98,8 +127,58 @@ mejores_peliculas_año = fn.mejores_peliculas_por_año(w)
 ####################################################################################
 
 
-base_unique = fn.proproc_sistema_1soloproducto()[0]
-pelicula2 = fn.proproc_sistema_1soloproducto()[1]
+pelicula=pd.read_sql('select * from movie_final2', conn )
+
+pelicula.info()
+pelicula['anio_pel']=pelicula.anio_pel.astype('int')
+pelicula.info()
+
+#convertir a dummies variable genero
+generos = set()
+for i in pelicula['genres'].str.split('|'):
+    generos.update(i)
+
+#cuantos generos hay y cuales son?
+num_generos = len(generos)
+print(f'Hay {num_generos} generos en la base de datos')
+
+#convertir la variable genero en una lista de generos 
+pelicula['gen_list'] = pelicula['genres'].str.split('|')
+
+#obtener las categorias unicas de genero
+gen_unique = set()
+for i in pelicula['gen_list']:
+    gen_unique.update(i)
+    
+#Convertir a dummies y agregar al dataframe original
+for i in gen_unique:
+    pelicula[i] = pelicula['gen_list'].apply(lambda x: 1 if i in x else 0)
+
+
+#eliminar la columna gen_list
+pelicula.drop(columns=['gen_list'], inplace=True)
+
+pd.set_option('display.max_columns', None)
+
+#Obstervar dataframe con generos dummies 
+pelicula.sample(10)
+
+pelicula2 = pelicula.drop(columns = 'genres',axis=1)
+
+pelicula2[pelicula2['movieId']== 5]
+
+basemod = pelicula2.copy()
+
+#eliminar columnas innecesarias
+basemod2 = basemod.copy()
+
+
+base_unique=basemod2.drop(columns=['movieId','pelicula'])
+
+sc=MinMaxScaler()
+base_unique['anio_pel']= sc.fit_transform(base_unique[['anio_pel']])
+base_unique
+
 
 joblib.dump(base_unique,"salidas\\base_unique.joblib") ### para utilizar en segundos modelos
 
@@ -147,6 +226,7 @@ pel = pd.read_sql('select * from movie_final2', conn)
 
 user = pd.read_sql('select distinct (user_id) as user_id from rating_final',conn)
 user
+
 
 
 def Recomendacion_segun_perfil_usuario(user_id=list(user['user_id'].value_counts().index)):
@@ -300,7 +380,7 @@ def recom_colaborativas(user_id=list(user['user_id'].value_counts().index),n_rec
 
 
  
- recom_colaborativas(user_id=609,n_recomend=10)
+recom_colaborativas(user_id=609,n_recomend=10)
 
 
 print(interact(recom_colaborativas))
