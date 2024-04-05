@@ -34,7 +34,7 @@ DROP TABLE IF EXISTS peliculas_sel;
 CREATE TABLE peliculas_sel AS SELECT movieid, count(*) AS calificaciones
 FROM ratings_alter
 GROUP BY movieid
-HAVING calificaciones >= 20 and calificaciones <= 150
+HAVING calificaciones >= 7 and calificaciones <= 150
 ORDER BY calificaciones DESC;
 
 --CREAR TABLA FILTRADA DE RATINGS  --
@@ -56,15 +56,6 @@ SELECT *,  SUBSTRING(
                     SUBSTRING(title, 1, LENGTH(title)-6) AS pelicula 
                     FROM movies;
                     
---2. BORRAR GENEROS POCO RELEVANTES
-
-DROP TABLE IF EXISTS gen;
-CREATE TABLE gen AS 
-SELECT genres AS genero,count(*) AS num_peliculas
-FROM movies_sel
-GROUP BY genero
-HAVING num_peliculas >= 20
-ORDER BY num_peliculas DESC;
 
 -- UNIR BASES gen y movies_sel -- PREGUNTAR SI SE PUEDE HACER DE OTRA FORMA
 
@@ -74,20 +65,20 @@ SELECT movies_sel.*
 FROM movies_sel
 INNER JOIN gen on movies_sel.genres = gen.genero;
 
---2. BORRAR COLUMNAS INNECESARIAS
-
-ALTER TABLE movie_final DROP COLUMN title;
-
 
 --- SELECCIONAR SOLO LAS FILAS QUE EL AÑO TENGA UN VALOR NUMERICO YA QUE HAY PELICULAS QUE NO TENIAN ESTA INFORMACION
 DROP TABLE IF EXISTS movie_final2;
 CREATE TABLE movie_final2 AS
-SELECT movie_final.*
-from movie_final
+SELECT movies_sel.*
+from movies_sel
 WHERE anio_pel GLOB '*[0-9]*';
 
 DELETE FROM movie_final2
 WHERE anio_pel LIKE '%)'; --Eliminar años que tengan parentesis
+
+--BORRAR COLUMNAS INNECESARIAS
+
+ALTER TABLE movie_final2 DROP COLUMN title;
 
 ---JUNTAR TABLAS---
 

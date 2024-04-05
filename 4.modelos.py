@@ -165,28 +165,25 @@ pelicula.sample(10)
 
 pelicula2 = pelicula.drop(columns = 'genres',axis=1)
 
-pelicula2[pelicula2['movieId']== 5]
-
 basemod = pelicula2.copy()
 
-#eliminar columnas innecesarias
+#Eliminar columnas innecesarias
 basemod2 = basemod.copy()
-
 
 base_unique=basemod2.drop(columns=['movieId','pelicula'])
 
+#Escalamos el año de lanzamiento de la pelicula
 sc=MinMaxScaler()
 base_unique['anio_pel']= sc.fit_transform(base_unique[['anio_pel']])
 base_unique
 
+#Exportamos la base de datos con dummies y escalada para poder utilizarla en otros modelos
+joblib.dump(base_unique,"salidas\\base_unique.joblib") 
 
-joblib.dump(base_unique,"salidas\\base_unique.joblib") ### para utilizar en segundos modelos
-
-
-##### ### entrenar modelo #####
+# Train Modelo de recomendacion  a travez de KNN (5 peliculas mas similares)
 
 ## el coseno de un angulo entre dos vectores es 1 cuando son perpendiculares y 0 cuando son paralelos(indicando que son muy similares)
-model = neighbors.NearestNeighbors(n_neighbors=5, metric='cosine')
+model = neighbors.NearestNeighbors(n_neighbors=5, metric='cosine') # definimos las peliculas a recomendar y la metrica para medir las distancias 
 model.fit(base_unique)
 dist, idlist = model.kneighbors(base_unique)
 
@@ -208,10 +205,9 @@ def Top_5_peliculas_similares(movie_name = list(pelicula2['pelicula'].value_coun
 print(interact(Top_5_peliculas_similares))
 
 
-
 #######################################################################
 #### 3 Sistema de recomendación basado en contenido KNN #################
-#### Con base en todo lo visto por el usuario #######################
+#### Generando un perfil al usuario              #######################
 #######################################################################
 
 # Base de datos con dummies y escalada
@@ -221,13 +217,10 @@ dum1
 
 #   Seleccionamos el usuario
 
-rat = pd.read_sql('select * from rating_final', conn)
-pel = pd.read_sql('select * from movie_final2', conn)
+rat = pd.read_sql('select * from rating_final', conn) # se selecciona la tabla que contiene los ratings de los usuarios
+pel = pd.read_sql('select * from movie_final2', conn) # se selecciona la tabla que contiene informacion de las peliculas
 
 user = pd.read_sql('select distinct (user_id) as user_id from rating_final',conn)
-user
-
-
 
 def Recomendacion_segun_perfil_usuario(user_id=list(user['user_id'].value_counts().index)):
     
@@ -237,21 +230,21 @@ def Recomendacion_segun_perfil_usuario(user_id=list(user['user_id'].value_counts
     ###convertir ratings del usuario a array
     mov_view=ratings['movie_id'].to_numpy()
     
-    ###agregar la columna de isbn y titulo del libro a dummie para filtrar y mostrar nombre
+    # Agregamos el movir_id y el nombre de la pelicula a la base de datos con dummies
     dum1[['movie_id','pelicula']]=pel[['movieId','pelicula']]
     
-    ### filtrar libros calificados por el usuario
+    ### filtrar peliculas calificadas por el usuario
     mov_v2=dum1[dum1['movie_id'].isin(mov_view)]
     
-    ## eliminar columna nombre e isbn
+    ## eliminar columnas de nombre y movie_id
     mov_v2=mov_v2.drop(columns=['movie_id','pelicula'])
-    mov_v2["indice"]=1 ### para usar group by y que quede en formato pandas tabla de centroide
+    mov_v2["indice"]=1 
     
     ##centroide o perfil del usuario
     centroide=mov_v2.groupby("indice").mean()
     
     
-    ### filtrar libros no leídos
+    ### filtrar peliculas que no ha visto el usuario 
     mov_nv=dum1[~dum1['movie_id'].isin(mov_view)]
     ## eliminbar nombre e isbn
     mov_nv=mov_nv.drop(columns=['movie_id','pelicula'])
