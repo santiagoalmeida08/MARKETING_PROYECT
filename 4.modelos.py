@@ -42,7 +42,7 @@ q = pd.read_sql("""select pelicula,
 q['pond'] = q['avg_rat']*(q['vistas']/q['vistas'].max())
 
 q.sort_values(by=['pond'], ascending=False).head(10)# Se tiene una nueva columna que es pond en la cual se balancea el rating con las vistas y obetener un nuevo puntaje 
-q
+
 
 
 
@@ -63,18 +63,6 @@ def Top_5_mejor_calificadas_del_mes(mes):
 print(interact(Top_5_mejor_calificadas_del_mes,mes=(1,12)))
 
 
-m = pd.read_sql("""select mes_clf, pelicula,
-            avg(rating) as avg_rat,
-            count(*) as vistas
-            from final_table
-            group by mes_clf, pelicula
-            order by mes_clf, avg_rat desc
-            """, conn)
-
-m['pond'] = m['avg_rat']*m['vistas']
-
-
-mejores_peliculas = fn.mejores_peliculas_por_mes(m)
 
 
 # las  peliculas mejores calificadas segun el año de lanzamiento de la pelicula###
@@ -88,7 +76,7 @@ w = pd.read_sql("""select anio_pel, pelicula,
             
             """, conn)
 
-w['pond'] = w['avg_rat']*w['vistas']
+w['pond'] = w['avg_rat']*(w['vistas']/w['vistas'].max())
 w.sort_values(by=['pond'], ascending=False)
 
 
