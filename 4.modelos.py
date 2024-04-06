@@ -39,37 +39,10 @@ q = pd.read_sql("""select pelicula,
             order by avg_rat desc 
             """, conn)
 
-q['pond'] = q['avg_rat']*q['vistas']
+q['pond'] = q['avg_rat']*(q['vistas']/q['vistas'].max())
 
-q.sort_values(by=['pond'], ascending=False).head(10)
+q.sort_values(by=['pond'], ascending=False).head(10)# Se tiene una nueva columna que es pond en la cual se balancea el rating con las vistas y obetener un nuevo puntaje 
 q
-
-a = pd.read_sql("""select pelicula,
-            avg(rating) as avg_rat,
-            count(*) as vistas
-            from final_table
-            group by  pelicula
-            order by avg_rat desc 
-            """, conn)
-
-a.info()
-a['vistas'].describe()
-#a.sort_values(by=['pond'], ascending=False).head(10)# Se tiene una nueva columna que es pond en la cual se balancea el rating con las vistas y obetenr un nuevo puntaje 
-
-def pond(data):
-    data['vistas_esc'] = data['vistas']/data['vistas'].max()
-    data['avg_rat_esc'] = data['avg_rat']/5.0
-    for vista in data['vistas']:
-        if vista <= 35:
-            data['pond'] = (data['avg_rat_esc']*0.3 + data['vistas_esc']*0.7)
-        elif vista > 35 and vista <= 100:
-            data['pond'] = (data['avg_rat_esc']*0.5 + data['vistas_esc']*0.5)
-        else:
-            data['pond'] = (data['avg_rat_esc']*0.7 + data['vistas_esc']*0.3)
-    return data
-
-z = pond(a)
-z.sort_values(by=['pond'], ascending=False).head(10)
 
 
 
@@ -84,7 +57,7 @@ def Top_5_mejor_calificadas_del_mes(mes):
             group by mes_clf, pelicula
             order by avg_rat desc
             """, conn)
-    m['pond'] = m['avg_rat']*m['vistas']
+    m['pond'] = m['avg_rat']*(m['vistas']/m['vistas'].max())
     return m.sort_values(by=['pond'], ascending=False).head(5)
 
 print(interact(Top_5_mejor_calificadas_del_mes,mes=(1,12)))
