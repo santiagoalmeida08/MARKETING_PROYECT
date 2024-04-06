@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import sqlite3 as sql
-import a_funciones as fn ## para procesamiento
+import funciones as fn ## para procesamiento
 import openpyxl
 
 
@@ -13,61 +13,98 @@ from sklearn import neighbors
 def preprocesar():
 
     #### conectar_base_de_Datos#################
-    conn=sql.connect('C:\\cod\\LEA3_RecSys\\data\\db_books2')
-    cur=conn.cursor()
+    conn = sql.connect('data_marketing//db_movies') # identifica bases de datos
+    cur = conn.cursor()
     
 
-    ######## convertir datos crudos a bases filtradas por usuarios que tengan cierto número de calificaciones
-    fn.ejecutar_sql('C:\\cod\\LEA3_RecSys\\preprocesamientos.sql', cur)
+    ######## Aplicar preprocesamiento 
+    fn.ejecutar_sql('2.preprocesamiento.sql',conn)
 
     ##### llevar datos que cambian constantemente a python ######
-    books=pd.read_sql('select * from books_final', conn )
-    ratings=pd.read_sql('select * from ratings_final', conn)
-    usuarios=pd.read_sql('select distinct (user_id) as user_id from ratings_final',conn)
+    pelicula=pd.read_sql('select * from movie_final2', conn )
+    ratings=pd.read_sql('select * from rating_final', conn)
+    final=pd.read_sql('select * from final_table', conn)
+    user=pd.read_sql('select distinct (user_id) as user_id from final_table',conn)
 
     
     #### transformación de datos crudos - Preprocesamiento ################
-    books['year_pub']=books.year_pub.astype('int')
+    
+    pelicula['anio_pel']=pelicula.anio_pel.astype('int')
 
-    ##### escalar para que año esté en el mismo rango ###
+    #convertir la variable genero en una lista de generos 
+    pelicula['gen_list'] = pelicula['genres'].str.split('|')
+    gen_unique = set()
+    for i in pelicula['gen_list']:
+        gen_unique.update(i)
+    
+    #Convertir a dummies y agregar al dataframe original
+    for i in gen_unique:
+        pelicula[i] = pelicula['gen_list'].apply(lambda x: 1 if i in x else 0)
+
+
+    #eliminar la columna gen_list
+    pelicula.drop(columns=['gen_list'], inplace=True)
+
+    pd.set_option('display.max_columns', None)
+
+    #Obstervar dataframe con generos dummies 
+    pelicula.sample(10)
+
+    pelicula2 = pelicula.drop(columns = 'genres',axis=1)
+
+    basemod = pelicula2.copy()
+
+    #Eliminar columnas innecesarias
+    basemod2 = basemod.copy()
+
+    base_unique=basemod2.drop(columns=['movieId','pelicula'])
+
+    #Escalamos el año de lanzamiento de la pelicula
     sc=MinMaxScaler()
-    books[["year_sc"]]=sc.fit_transform(books[['year_pub']])
+    base_unique['anio_pel']= sc.fit_transform(base_unique[['anio_pel']])
 
-    ## eliminar filas que no se van a utilizar ###
-    books_dum1=books.drop(columns=['isbn','i_url','year_pub','book_title'])
-
-    col_dum=['book_author','publisher']
-    books_dum2=pd.get_dummies(books_dum1,columns=col_dum)
-    return books_dum2,books, conn, cur
+    return base_unique,pelicula, conn, cur
 
 ##########################################################################
 ###############Función para entrenar modelo por cada usuario ##########
 ###############Basado en contenido todo lo visto por el usuario Knn#############################
 def recomendar(user_id):
     
-    books_dum2, books, conn, cur= preprocesar()
+    base_unique, pelicula, conn, cur= preprocesar()
+    ###seleccionar solo los ratings del usuario seleccionado
+    ratings=pd.read_sql('select *from rating_final where user_id=:user',conn, params={'user':user_id,})
     
-    ratings=pd.read_sql('select *from ratings_final where user_id=:user',conn, params={'user':user_id})
-    l_books_r=ratings['isbn'].to_numpy()
-    books_dum2[['isbn','book_title']]=books[['isbn','book_title']]
-    books_r=books_dum2[books_dum2['isbn'].isin(l_books_r)]
-    books_r=books_r.drop(columns=['isbn','book_title'])
-    books_r["indice"]=1 ### para usar group by y que quede en formato pandas tabla de centroide
-    centroide=books_r.groupby("indice").mean()
+    ###convertir ratings del usuario a array
+    mov_view=ratings['movie_id'].to_numpy()
+    
+    # Agregamos el movir_id y el nombre de la pelicula a la base de datos con dummies
+    base_unique[['movie_id','pelicula']]=pelicula[['movieId','pelicula']]
+    
+    ### filtrar peliculas calificadas por el usuario
+    mov_v2=base_unique[base_unique['movie_id'].isin(mov_view)]
+    
+    ## eliminar columnas de nombre y movie_id
+    mov_v2=mov_v2.drop(columns=['movie_id','pelicula'])
+    mov_v2["indice"]=1 
+    
+    ##centroide o perfil del usuario
+    centroide=mov_v2.groupby("indice").mean()
     
     
-    books_nr=books_dum2[~books_dum2['isbn'].isin(l_books_r)]
-    books_nr=books_nr.drop(columns=['isbn','book_title'])
+    ### filtrar peliculas que no ha visto el usuario 
+    mov_nv=base_unique[~base_unique['movie_id'].isin(mov_view)]
+    ## eliminbar nombre e isbn
+    mov_nv=mov_nv.drop(columns=['movie_id','pelicula'])
+    
+    ### entrenar modelo 
     model=neighbors.NearestNeighbors(n_neighbors=11, metric='cosine')
-    model.fit(books_nr)
+    model.fit(mov_nv)
     dist, idlist = model.kneighbors(centroide)
     
-    ids=idlist[0]
-    recomend_b=books.loc[ids][['book_title','isbn']]
-    
-    
+    ids=idlist[0] ### queda en un array anidado, para sacarlo
+    recomend_b=pelicula.loc[ids][['pelicula','movieId']]
+    #leidos=pelicula[pelicula['movieId'].isin(mov_v2)][['pelicula','movieId']] 
     return recomend_b
-
 
 ##### Generar recomendaciones para usuario lista de usuarios ####
 ##### No se hace para todos porque es muy pesado #############
@@ -82,8 +119,8 @@ def main(list_user):
         
         recomendaciones_todos=pd.concat([recomendaciones_todos, recomendaciones])
 
-    recomendaciones_todos.to_excel('C:\\cod\\LEA3_RecSys\\salidas\\reco\\recomendaciones.xlsx')
-    recomendaciones_todos.to_csv('C:\\cod\\LEA3_RecSys\\salidas\\reco\\recomendaciones.csv')
+    recomendaciones_todos.to_excel('C:\\cod\\MARKETING_PROYECT\\salidas\\reco\\recomendaciones.xlsx')
+    recomendaciones_todos.to_csv('C:\\cod\\MARKETING_PROYECT\\salidas\\reco\\recomendaciones.csv')
 
 
 if __name__=="__main__":
