@@ -26,7 +26,7 @@ def mejores_peliculas_por_año(w):
         lista.append(mejores_peliculas)
     return pd.concat(lista)
 
-# Funcion preprocesamiento basado en contenido
+#3. Funcion para preprocesar los generos de las peliculas y escalar el año de lanzamiento
 
 def pre_KNN_1producto():
     conn = sql.connect('data_marketing//db_movies') # identifica bases de datos

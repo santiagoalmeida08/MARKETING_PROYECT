@@ -17,11 +17,11 @@ from sklearn import neighbors ### basado en contenido un solo producto consumido
 import joblib
 import funciones as fn
 from surprise import Reader, Dataset
-from surprise.model_selection import cross_validate, GridSearchCV
+from surprise.model_selection import cross_validate
+from surprise.model_selection import RandomizedSearchCV
 from surprise import KNNBasic, KNNWithMeans, KNNWithZScore, KNNBaseline
 from surprise.model_selection import train_test_split
-
-
+from surprise import SVD
 
 conn = sql.connect('data_marketing//db_movies') # identifica bases de datos
 cur = conn.cursor() # permite e]jecutar comandos SQL
@@ -36,7 +36,6 @@ cur.fetchall()
 ################## 2. Sistemas de recomendacion basados en popularidad ###############
 ######################################################################################
 
-
 #2.1) Top 10 mejores calificadas de la plataforma  
 
 q = pd.read_sql("""select pelicula,
@@ -50,9 +49,6 @@ q = pd.read_sql("""select pelicula,
 q['pond'] = q['avg_rat']*(q['vistas']/q['vistas'].max())
 
 q.sort_values(by=['pond'], ascending=False).head(10)# Se tiene una nueva columna que es pond en la cual se balancea el rating con las vistas y obetener un nuevo puntaje 
-
-
-
 
 #2.2) Top 5 peliculas mejor calificadas del mes
 
@@ -87,61 +83,9 @@ w.sort_values(by=['pond'], ascending=False)
 
 mejores_peliculas_año = fn.mejores_peliculas_por_año(w)
 
-
 #########################################################################################
 ######## 2.1 Sistema de recomendación basado en contenido un solo producto - KNN ########
 #########################################################################################
-"""
-pelicula=pd.read_sql('select * from movie_final2', conn )
-
-pelicula.info()
-pelicula['anio_pel']=pelicula.anio_pel.astype('int')
-pelicula.info()
-
-#convertir a dummies variable genero
-generos = set()
-for i in pelicula['genres'].str.split('|'):
-    generos.update(i)
-
-#cuantos generos hay y cuales son?
-num_generos = len(generos)
-print(f'Hay {num_generos} generos en la base de datos')
-
-#convertir la variable genero en una lista de generos 
-pelicula['gen_list'] = pelicula['genres'].str.split('|')
-
-#obtener las categorias unicas de genero
-gen_unique = set()
-for i in pelicula['gen_list']:
-    gen_unique.update(i)
-    
-#Convertir a dummies y agregar al dataframe original
-for i in gen_unique:
-    pelicula[i] = pelicula['gen_list'].apply(lambda x: 1 if i in x else 0)
-
-
-#eliminar la columna gen_list
-pelicula.drop(columns=['gen_list'], inplace=True)
-
-pd.set_option('display.max_columns', None)
-
-#Obstervar dataframe con generos dummies 
-pelicula.sample(10)
-
-pelicula2 = pelicula.drop(columns = 'genres',axis=1)
-
-basemod = pelicula2.copy()
-
-#Eliminar columnas innecesarias
-basemod2 = basemod.copy()
-
-base_unique=basemod2.drop(columns=['movieId','pelicula'])
-
-#Escalamos el año de lanzamiento de la pelicula
-sc=MinMaxScaler()
-base_unique['anio_pel']= sc.fit_transform(base_unique[['anio_pel']])
-base_unique
-"""
 
 base_unique,pelicula2 = fn.pre_KNN_1producto()
 
@@ -151,7 +95,10 @@ joblib.dump(base_unique,"salidas\\base_unique.joblib")
 # Train Modelo de recomendacion  a travez de KNN (5 peliculas mas similares)
 
 ## el coseno de un angulo entre dos vectores es 1 cuando son perpendiculares y 0 cuando son paralelos(indicando que son muy similares)
-model = neighbors.NearestNeighbors(n_neighbors=5, metric='cosine') # definimos las peliculas a recomendar y la metrica para medir las distancias 
+model = neighbors.NearestNeighbors(n_neighbors=7, metric='cosine') # definimos las peliculas a recomendar y la metrica para medir las distancias
+#se definieron 7 vecinos ya que en la funcion interact a veces no se recomendaban la misma cantidad de peliculas,por lo cual se implemento en la funcion
+#2 condicionales, uno que evita que se recomiende la misma pelicula y otro que hace que la lista de recomendaciones sea de 5 peliculas 
+ 
 model.fit(base_unique)
 dist, idlist = model.kneighbors(base_unique)
 
@@ -161,8 +108,6 @@ id_list=pd.DataFrame(idlist) ## para saber esas distancias a que item correspond
 
 
 def Top_5_peliculas_similares(movie_name = list(pelicula2['pelicula'].value_counts().index)):
-
-
     movie_list_name = []
     movie_id = pelicula2[pelicula2['pelicula'] == movie_name].index
     movie_id = movie_id[0]
@@ -170,6 +115,8 @@ def Top_5_peliculas_similares(movie_name = list(pelicula2['pelicula'].value_coun
         if newid == movie_id:
             continue # si es el mismo no lo recomienda
         movie_list_name.append(pelicula2.loc[newid].pelicula)
+        if len(set(movie_list_name)) == 5: # si ya tiene 5 recomendaciones no agrega mas peliculas
+            break
     return list(set(movie_list_name)) 
 
 print(interact(Top_5_peliculas_similares))
@@ -220,7 +167,7 @@ def Recomendacion_segun_perfil_usuario(user_id=list(user['user_id'].value_counts
     mov_nv=mov_nv.drop(columns=['movie_id','pelicula'])
     
     ### entrenar modelo 
-    model=neighbors.NearestNeighbors(n_neighbors=11, metric='cosine')
+    model=neighbors.NearestNeighbors(n_neighbors=10, metric='cosine')
     model.fit(mov_nv)
     dist, idlist = model.kneighbors(centroide)
     
@@ -238,8 +185,6 @@ print(interact(Recomendacion_segun_perfil_usuario))
 #####4. Sistema de recomendación filtro colaborativo #####
 ############################################################################
 
-### datos originales en pandas
-## knn solo sirve para calificaciones explicitas
 ratings=pd.read_sql('select * from rating_final', conn)
 ratings['rating'].value_counts()
 
@@ -250,18 +195,14 @@ reader = Reader(rating_scale=(0, 5)) ### la escala de la calificación 0-5
 #Lectura dataset con el orden especificado 
 data   = Dataset.load_from_df(ratings[['user_id','movie_id','rating']], reader)
 
-from surprise import SVD
-#####Existen varios modelos 
+
+
+# Evaluación de modelos de recomendación colaborativos
 models=[KNNBasic(),KNNWithMeans(),KNNWithZScore(),KNNBaseline(),SVD()] 
 results = {}
 
-###knnBasiscs: calcula el rating ponderando por distancia con usuario/Items
-###KnnWith means: en la ponderación se resta la media del rating, y al final se suma la media general
-####KnnwithZscores: estandariza el rating restando media y dividiendo por desviación 
-####Knnbaseline: calculan el desvío de cada calificación con respecto al promedio y con base en esos calculan la ponderación
 
-
-#### for para probar varios modelos ##########
+# Hacemos un ciclo para evaluar el rendimiento de los modelos utilizando la metrica RMSE debido a su facilidad de interpretación
 model=models[1]
 
 for model in models:
@@ -276,28 +217,23 @@ for model in models:
 performance_df = pd.DataFrame.from_dict(results).T
 performance_df.sort_values(by='RMSE')
 
+"""Elegimos el modelo KNNBaseline ya que es el que tiene el menor RMSE lo cual implica que 
+  es el que tiene un mejor rendimiento en la predicción de los ratings, sin embargo hay que tener en cuenta que es el que tiene un mayor tiempo de ejecución"""
+  
+param = { 'k': [5, 10, 15, 20], # definimos un rango de vecinos de 5 a 20
+              'min_k': [5,6,7,8], # minimo de vecinos para que se pueda hacer una predicción
+              'sim_options': {'name': ['cosine','msd'],
+                              'min_support': [5,6,7]}}# si no hay minimo 5 personas que lo calificaron no recomiende el producto 
 
-#el modelo de knns.KNNWithMeans el RMSE no varia mucho comparado con los demas modelos y ademas el tiempo es el menor por esto se selecciona este modelo
-###################se escoge el mejor knn withmeans#########################
-param_grid = { 'sim_options' : {'name': ['msd','cosine'], \
-                                'min_support': [10,5], \
-                                'user_based': [False, True]}
-             }# si no hay minimo 5 personas que lo calificaron no recomiende el producto 
+#importo ramndomizedsearchCV para hacer la busqueda de los mejores parametros
 
-## min support es la cantidad de items o usuarios que necesita para calcular recomendación
-## name medidas de distancia
+randomknn_baseline = RandomizedSearchCV(KNNBaseline, param, measures=['rmse'], \
+                                        cv=5, n_jobs=-1)
+randomknn_baseline.fit(data)
+randomknn_baseline.best_params['rmse']
+randomknn_baseline.best_score['rmse']
 
-### se afina si es basado en usuario o basado en ítem
-
-gridsearchKNNWithMeans = GridSearchCV(KNNWithMeans, param_grid, measures=['rmse'], \
-                                      cv=2, n_jobs=-1)# el cv y el n_jobs puede variar
-                                    
-gridsearchKNNWithMeans.fit(data)
-
-
-gridsearchKNNWithMeans.best_params["rmse"]
-gridsearchKNNWithMeans.best_score["rmse"]
-gs_model=gridsearchKNNWithMeans.best_estimator['rmse'] ### mejor estimador de gridsearch
+gs_model=randomknn_baseline.best_estimator['rmse'] ### mejor estimador de gridsearch
 
 
 ################# Entrenar con todos los datos y Realizar predicciones con el modelo afinado
