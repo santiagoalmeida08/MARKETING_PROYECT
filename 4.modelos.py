@@ -91,7 +91,6 @@ mejores_peliculas_año = fn.mejores_peliculas_por_año(w)
 #########################################################################################
 ######## 2.1 Sistema de recomendación basado en contenido un solo producto - KNN ########
 #########################################################################################
-
 """
 pelicula=pd.read_sql('select * from movie_final2', conn )
 
@@ -143,10 +142,8 @@ sc=MinMaxScaler()
 base_unique['anio_pel']= sc.fit_transform(base_unique[['anio_pel']])
 base_unique
 """
-import importlib
-importlib.reload(fn)
 
-base_unique = fn.pre_KNN_1producto()[1]
+base_unique,pelicula2 = fn.pre_KNN_1producto()
 
 #Exportamos la base de datos con dummies y escalada para poder utilizarla en otros modelos
 joblib.dump(base_unique,"salidas\\base_unique.joblib") 
@@ -162,18 +159,8 @@ dist, idlist = model.kneighbors(base_unique)
 distancias=pd.DataFrame(dist) ## devuelve un ranking de la distancias más cercanas para cada fila(pelicula)
 id_list=pd.DataFrame(idlist) ## para saber esas distancias a que item corresponde
 
-"""
+
 def Top_5_peliculas_similares(movie_name = list(pelicula2['pelicula'].value_counts().index)):
-    base_unique = fn.pre_KNN_1producto()[0]
-    pelicula2 = fn.pre_KNN_1producto()[1]
-    ## el coseno de un angulo entre dos vectores es 1 cuando son perpendiculares y 0 cuando son paralelos(indicando que son muy similares)
-    model = neighbors.NearestNeighbors(n_neighbors=5, metric='cosine') # definimos las peliculas a recomendar y la metrica para medir las distancias 
-    model.fit(base_unique)
-    dist, idlist = model.kneighbors(base_unique)
-
-
-    distancias=pd.DataFrame(dist) ## devuelve un ranking de la distancias más cercanas para cada fila(pelicula)
-    id_list=pd.DataFrame(idlist) ## para saber esas distancias a que item corresponde
 
 
     movie_list_name = []
@@ -184,7 +171,7 @@ def Top_5_peliculas_similares(movie_name = list(pelicula2['pelicula'].value_coun
             continue # si es el mismo no lo recomienda
         movie_list_name.append(pelicula2.loc[newid].pelicula)
     return list(set(movie_list_name)) 
-"""
+
 print(interact(Top_5_peliculas_similares))
 
 
