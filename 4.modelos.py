@@ -1,3 +1,13 @@
+# Descripción: En este script se desarrollan los modelos de recomendación basados en popularidad, contenido y colaborativos.
+
+#1. Importar librerías
+#2. Sistema de recomendación basado en popularidad
+#3. Sistema de recomendación basado en contenido un solo producto - KNN
+#4. Sistema de recomendación basado en contenido KNN
+#5. Sistema de recomendación filtro colaborativo
+
+
+#1. Importar librerías
 import numpy as np
 import pandas as pd
 import sqlite3 as sql
@@ -6,12 +16,12 @@ from ipywidgets import interact ## para análisis interactivo
 from sklearn import neighbors ### basado en contenido un solo producto consumido
 import joblib
 import funciones as fn
-
-
 from surprise import Reader, Dataset
 from surprise.model_selection import cross_validate, GridSearchCV
 from surprise import KNNBasic, KNNWithMeans, KNNWithZScore, KNNBaseline
 from surprise.model_selection import train_test_split
+
+
 
 conn = sql.connect('data_marketing//db_movies') # identifica bases de datos
 cur = conn.cursor() # permite e]jecutar comandos SQL
@@ -22,14 +32,12 @@ cur.execute("SELECT name FROM sqlite_master WHERE type='table';")
 cur.fetchall()
 
 
-######################################################################
-################## 1. sistemas basados en popularidad ###############
-#####################################################################
+######################################################################################
+################## 2. Sistemas de recomendacion basados en popularidad ###############
+######################################################################################
 
 
-##### recomendaciones basado en popularidad ######
-
-# las peliculas 10 mejores calificadas DE LA PLATAFORMA  
+#2.1) Top 10 mejores calificadas de la plataforma  
 
 q = pd.read_sql("""select pelicula,
             avg(rating) as avg_rat,
@@ -46,7 +54,7 @@ q.sort_values(by=['pond'], ascending=False).head(10)# Se tiene una nueva columna
 
 
 
-# 5 peliculas mejor calificadas del mes
+#2.2) Top 5 peliculas mejor calificadas del mes
 
 def Top_5_mejor_calificadas_del_mes(mes):
     m = pd.read_sql(f"""select mes_clf, pelicula,
@@ -62,10 +70,7 @@ def Top_5_mejor_calificadas_del_mes(mes):
 
 print(interact(Top_5_mejor_calificadas_del_mes,mes=(1,12)))
 
-
-
-
-# las  peliculas mejores calificadas segun el año de lanzamiento de la pelicula###
+#2.3) Películas mejores calificadas segun su año de lanzamiento 
 
 w = pd.read_sql("""select anio_pel, pelicula, 
             avg(rating) as avg_rat,
@@ -83,11 +88,11 @@ w.sort_values(by=['pond'], ascending=False)
 mejores_peliculas_año = fn.mejores_peliculas_por_año(w)
 
 
-####################################################################################
+#########################################################################################
 ######## 2.1 Sistema de recomendación basado en contenido un solo producto - KNN ########
-####################################################################################
+#########################################################################################
 
-
+"""
 pelicula=pd.read_sql('select * from movie_final2', conn )
 
 pelicula.info()
@@ -137,6 +142,9 @@ base_unique=basemod2.drop(columns=['movieId','pelicula'])
 sc=MinMaxScaler()
 base_unique['anio_pel']= sc.fit_transform(base_unique[['anio_pel']])
 base_unique
+"""
+
+base_unique = fn.pre_KNN_1producto()
 
 #Exportamos la base de datos con dummies y escalada para poder utilizarla en otros modelos
 joblib.dump(base_unique,"salidas\\base_unique.joblib") 
