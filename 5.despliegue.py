@@ -9,16 +9,15 @@ import openpyxl
 from sklearn.preprocessing import MinMaxScaler
 from sklearn import neighbors
 
-
 def preprocesar():
 
     #### conectar_base_de_Datos#################
-    conn = sql.connect('data_marketing//db_movies') # identifica bases de datos
+    conn = sql.connect('C:\\Users\\Usuario\\Desktop\\Analitica3\\MARKETING_PROYECT\\MARKETING_PROYECT\\data_marketing\\db_movies') # identifica bases de datos
     cur = conn.cursor()
     
 
     ######## Aplicar preprocesamiento 
-    fn.ejecutar_sql('2.preprocesamiento.sql',conn)
+    fn.ejecutar_sql('C:\\Users\\Usuario\\Desktop\\Analitica3\\MARKETING_PROYECT\\MARKETING_PROYECT\\2.preprocesamiento.sql',conn)
 
     ##### llevar datos que cambian constantemente a python ######
     pelicula=pd.read_sql('select * from movie_final2', conn )
@@ -65,9 +64,12 @@ def preprocesar():
 
     return base_unique,pelicula, conn, cur
 
-##########################################################################
-###############Función para entrenar modelo por cada usuario ##########
+
+################################################################################################
+###############Función para entrenar modelo por cada usuario ###################################
 ###############Basado en contenido todo lo visto por el usuario Knn#############################
+
+
 def recomendar(user_id):
     
     base_unique, pelicula, conn, cur= preprocesar()
@@ -108,6 +110,8 @@ def recomendar(user_id):
 
 ##### Generar recomendaciones para usuario lista de usuarios ####
 ##### No se hace para todos porque es muy pesado #############
+
+
 def main(list_user):
     
     recomendaciones_todos=pd.DataFrame()
@@ -118,13 +122,14 @@ def main(list_user):
         recomendaciones.reset_index(inplace=True,drop=True)
         
         recomendaciones_todos=pd.concat([recomendaciones_todos, recomendaciones])
-
-    recomendaciones_todos.to_excel('C:\\cod\\MARKETING_PROYECT\\salidas\\reco\\recomendaciones.xlsx')
-    recomendaciones_todos.to_csv('C:\\cod\\MARKETING_PROYECT\\salidas\\reco\\recomendaciones.csv')
+        
+    #RUTAS COMPUTADOR SANTIAGO  
+    recomendaciones_todos.to_excel('C:\\Users\\Usuario\\Desktop\\Analitica3\\MARKETING_PROYECT\\MARKETING_PROYECT\\salidas\\recomendaciones.xlsx')
+    recomendaciones_todos.to_csv('C:\\Users\\Usuario\\Desktop\\Analitica3\\MARKETING_PROYECT\\MARKETING_PROYECT\\salidas\\recomendaciones.csv')
 
 
 if __name__=="__main__":
-    list_user=[52853,31226,167471,8066 ]
+    list_user=[6,100,350,120 ]
     main(list_user)
     
 
