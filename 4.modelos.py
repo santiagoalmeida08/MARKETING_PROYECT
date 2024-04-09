@@ -84,7 +84,7 @@ w.sort_values(by=['pond'], ascending=False)
 mejores_peliculas_año = fn.mejores_peliculas_por_año(w)
 
 #########################################################################################
-######## 2.1 Sistema de recomendación basado en contenido un solo producto - KNN ########
+######## 3. Sistema de recomendación basado en contenido un solo producto - KNN ########
 #########################################################################################
 
 base_unique,pelicula2 = fn.pre_KNN_1producto()
@@ -123,7 +123,7 @@ print(interact(Top_5_peliculas_similares))
 
 
 #######################################################################
-#### 3 Sistema de recomendación basado en contenido KNN #################
+#### 4 Sistema de recomendación basado en contenido KNN #################
 #### Generando un perfil al usuario              #######################
 #######################################################################
 
@@ -182,7 +182,7 @@ print(interact(Recomendacion_segun_perfil_usuario))
 
 
 ############################################################################
-#####4. Sistema de recomendación filtro colaborativo #####
+#####5. Sistema de recomendación filtro colaborativo #####
 ############################################################################
 
 ratings=pd.read_sql('select * from rating_final', conn)
