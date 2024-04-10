@@ -131,11 +131,19 @@ tabla= pd.read_sql("""SELECT * FROM movie_final
 final_table = pd.read_sql('SELECT * FROM final_table', conn)
 final_table.sample(3)
 
-# Generos mas vistos
+# Generos con mas peliculas 
 
 gen = pd.read_sql("""select genres,
-            count(*) as vistas_genero
+            count(*) as peliculas_genero
+            from movies
+            group by  genres
+            order by peliculas_genero desc 
+            """, conn)
+#generos mas vistos
+
+gen_vis = pd.read_sql("""select genres,
+            count(*) as vistas
             from final_table
             group by  genres
-            order by vistas_genero desc 
+            order by vistas desc 
             """, conn)
