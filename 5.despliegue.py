@@ -16,11 +16,19 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn import neighbors
 
 """2. Descripción del despliegue : --considerar prediccion y entrenamiento 
+-Para los sistemas de recomendación basados en el perfil del usuario se realizara una predicción a demanda de los usuarios, es decir,
+cuando un usuario termine de ver una pelicula , se le recomendará una lista de peliculas que le puedan interesar; por lo tanto, el entrenamiento
+del modelo se realizara diariamente para asi tener actualizado el perfil de los usuarios y poder realizar las recomendaciones de forma eficiente.
+
+- Los sistemas basados en popularidad se actualizaran y se entrenaran  mensualmente, ya que se basan en la popularidad de las peliculas y no en el perfil
+de los usuarios.Una vez se tengan las listas del top 5 o 10 de las peliculas se compartirá la información a los desarrodores front-end para que puedan hacer 
+el respectivo diseño y modificaciones en el interfaz de la aplicación.
+
 -Definir tipo de despliegue a abordar con : 
 1.Frecuencia de entrenamiento
 2.Frecuencia de predicción
 Cuando se tenga las predicciones se debe:
-- enviar lista con recomendaciones a los desarrolladores para que puedan implementar la funcionalidad en la aplicación
+
 -"""
 
 #3. Implementación del modelo de recomendación basado en contenido
