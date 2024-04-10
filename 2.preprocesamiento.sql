@@ -20,7 +20,7 @@ ALTER TABLE ratings_alter DROP COLUMN fecha;
 
                     -- FILTROS DE TABLA RATINGS--
 
---4. CREAR TABLA CON USUARIOS QUE HAN VISTO MENOS DE 1000 PELICULAS
+--4. CREAR TABLA CON USUARIOS QUE HAN VISTO ENTRE 10 Y 1000 PELICULAS
 
 DROP TABLE IF EXISTS usuarios_sel;
 CREATE TABLE usuarios_sel AS SELECT userid AS usuario, count(*) AS num_peliculas
@@ -56,15 +56,6 @@ SELECT *,  SUBSTRING(
                     SUBSTRING(title, 1, LENGTH(title)-6) AS pelicula 
                     FROM movies;
                     
-
--- UNIR BASES gen y movies_sel -- PREGUNTAR SI SE PUEDE HACER DE OTRA FORMA
-
-DROP TABLE IF EXISTS movie_final;
-CREATE TABLE movie_final AS
-SELECT movies_sel.* 
-FROM movies_sel
-INNER JOIN gen on movies_sel.genres = gen.genero;
-
 
 --- SELECCIONAR SOLO LAS FILAS QUE EL AÑO TENGA UN VALOR NUMERICO YA QUE HAY PELICULAS QUE NO TENIAN ESTA INFORMACION
 DROP TABLE IF EXISTS movie_final2;

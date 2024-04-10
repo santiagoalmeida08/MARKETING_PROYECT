@@ -1,13 +1,30 @@
+ #En este script de explica inicialmente de forma textual cual podria ser la mejor opcion de realizar el despliegue del modelo
+# y adicionalmente se realiza la implementacion del modelo de recomendacion basado en contenido acorde al perfil de usuario
+
+#1. Importar paquetes
+#2. Descripción del despliegue 
+#3. Implementación del modelo de recomendación basado en contenido	
+
+#1. Importar paquetes
 import numpy as np
 import pandas as pd
 import sqlite3 as sql
 import funciones as fn ## para procesamiento
 import openpyxl
-
-
-####Paquete para sistema basado en contenido ####
+#Paquete para sistema basado en contenido 
 from sklearn.preprocessing import MinMaxScaler
 from sklearn import neighbors
+
+"""2. Descripción del despliegue : --considerar prediccion y entrenamiento 
+-Definir tipo de despliegue a abordar con : 
+1.Frecuencia de entrenamiento
+2.Frecuencia de predicción
+Cuando se tenga las predicciones se debe:
+- enviar lista con recomendaciones a los desarrolladores para que puedan implementar la funcionalidad en la aplicación
+-"""
+
+#3. Implementación del modelo de recomendación basado en contenido
+#3.1 Preprocesamiento de datos
 
 def preprocesar():
 
@@ -69,7 +86,7 @@ def preprocesar():
 ###############Función para entrenar modelo por cada usuario ###################################
 ###############Basado en contenido todo lo visto por el usuario Knn#############################
 
-
+#3.2 Función para recomendar peliculas a un usuario en especifico
 def recomendar(user_id):
     
     base_unique, pelicula, conn, cur= preprocesar()
@@ -111,7 +128,7 @@ def recomendar(user_id):
 ##### Generar recomendaciones para usuario lista de usuarios ####
 ##### No se hace para todos porque es muy pesado #############
 
-
+#3.3 Función para generar recomendaciones para una lista de usuarios
 def main(list_user):
     
     recomendaciones_todos=pd.DataFrame()

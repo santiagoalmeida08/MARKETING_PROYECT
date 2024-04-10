@@ -1,11 +1,18 @@
+# En este script se realiza la exploración de datos de las tablas ratings y movies de la base de datos db_movies buscando evaluar e identificar
+# la estructura y calidad de los datos
 
-#Paquetes
+#1. Importar paquetes
+#2. Conectarse a la base de datos y cargar las tablas
+#3. Analizar la estructura de las tablas ratings 
+#4. Analisis de la tabla movies
+
+#1. Importar paquetes
 import sqlite3 as sql
 import pandas as pd
 import seaborn as sns
 import funciones as fn
 
-# Conectarse a la base de datos 
+# 2. Conectarse a la base de datos y cargar las tablas
 conn = sql.connect('data_marketing//db_movies') # identifica bases de datos
 cur = conn.cursor() # permite e]jecutar comandos SQL
 
@@ -24,6 +31,7 @@ ratings.sample(5)  #Cambiar formato timestamp, poner todas letras de variables e
 movie.info()
 movie.sample(5) # separar el año de la película del nombre , poner nombre de variables y valores en minúsculas
 
+#3. Analizar la estructura de la tabla ratings
 
 # Convertir el timestamp a formato fecha en la tabla ratings
 #Ejecutamos el script de preprocesamiento en esta etapa para cambiar el formato de timestamp a fecha y hacer la exploración de datos
@@ -99,8 +107,7 @@ f2.describe()
 
 sns.histplot(f2['calificaciones'], color='orange', bins=70)
 
-
-#2. Exploración de datos tabla movies
+#4. Exploración de datos tabla movies
 
 movie.info() 
 
@@ -117,25 +124,6 @@ ll.head(10)
 tabla= pd.read_sql("""SELECT * FROM movie_final
             WHERE anio_pel GLOB '*[0-9]*' 
             """, conn) # SELECCIONAR SOLO LAS FILAS QUE TIENEN CARACTERES NUMERICOS
-
-
-# Cuantas peliculas tiene cada genero?
-
-g1 = pd.read_sql("""SELECT genres AS genero,count(*) AS num_peliculas
-                    FROM movies_sel
-                    GROUP BY genero
-                    ORDER BY num_peliculas DESC""",conn)###
-
-
-g2 = pd.read_sql("""SELECT genres AS genero,count(*) AS num_peliculas
-                    FROM movies_sel
-                    GROUP BY genero
-                    HAVING num_peliculas >= 20
-                    ORDER BY num_peliculas DESC""",conn)###
-
-
-
-gen = pd.read_sql('SELECT * FROM gen', conn)
 
 
 #Observamos la tabla final
